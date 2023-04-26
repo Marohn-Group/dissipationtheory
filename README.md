@@ -1,7 +1,5 @@
 # dissipationtheory
 
-|GitHub version| |PyPI version shields.io| |PyPI pyversions| |Unittests|
-
 Compute atomic force microscope cantilever dissipation and frequency noise over metals and dielectrics.  Compute cantilever capacitance using a sphere plus a cone model.
 
 ## Theory
@@ -66,4 +64,11 @@ and be prepared to wait while the many dependent packages are installed.  We now
 
 ```
 $ poetry run pytest
+```
+
+After updating the package dependencies in `pyproject.toml`, I'll run
+
+```
+$ poetry lock
+$ poetry install
 ```
