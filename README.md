@@ -59,4 +59,8 @@ To install the packages run
 $ poetry install
 ```
 
-and be prepared to wait while the many dependent packages are installed.  We now have a `poetry.lock` file present.
+and be prepared to wait while the many dependent packages are installed.  We now have a `poetry.lock` file present.  To run the unit tests,
+
+```
+$ poetry run pytest
+```
