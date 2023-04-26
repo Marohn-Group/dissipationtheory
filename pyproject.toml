@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "dissipationtheory"
+version = "0.1.0"
+description = "Compute atomic force microscope cantilever dissipation and frequency noise over metals and dielectrics.  Compute cantilever capacitance using a sphere plus a cone model."
+authors = ["John A. Marohn <jam99@cornell.edu>"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pandas = "^2.0.1"
+numpy = "^1.24.3"
+sympy = "^1.11.1"
+matplotlib = "^3.7.1"
+lmfit = "^1.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
