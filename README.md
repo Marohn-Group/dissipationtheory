@@ -1,4 +1,7 @@
 # dissipationtheory
+
+|GitHub version| |PyPI version shields.io| |PyPI pyversions| |Unittests|
+
 Compute atomic force microscope cantilever dissipation and frequency noise over metals and dielectrics.  Compute cantilever capacitance using a sphere plus a cone model.
 
 ## Theory

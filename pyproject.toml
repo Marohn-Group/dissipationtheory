@@ -6,6 +6,12 @@ authors = ["John A. Marohn <jam99@cornell.edu>"]
 license = "MIT License"
 readme = "README.md"
 
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
 [tool.poetry.dependencies]
 python = "^3.8"
 pandas = "1.5.3"
@@ -16,6 +22,50 @@ lmfit = "^1.2.0"
 pytest = "^7.3.1"
 
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.poetry.extras]
+test = ["pytest", "pytest-cov"]
+
+
+[tool.coverage.run]
+# pytest coverage
+source_pkgs = ['dissipationtheory']
+omit = ['tests/*']
+
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py38, py39, py310, py311, coverage
+isolated_build = True
+
+
+[testenv:py38]
+deps =
+    pytest >= 7.1.1
+commands = pytest
+
+[testenv:py39]
+deps =
+    pytest >= 7.1.1
+commands = pytest
+[testenv:py310]
+deps =
+    pytest >= 7.1.1
+commands = pytest
+
+[testenv:py311]
+deps =
+    pytest >= 7.1.1
+commands = pytest
+
+
+[testenv:coverage]
+deps = 
+    pytest >= 7.3.1
+    pytest-cov >= 3.0.0
+commands =
+    coverage run --source=tests -m pytest
+    coverage html
+    coverage report
+
+"""
