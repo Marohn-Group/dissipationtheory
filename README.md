@@ -16,6 +16,8 @@ This package impliments models of tip-sample capacitance used in the following s
 
 ## Install the development version
 
+### Via poetry
+
 I am using the poetry tool ([link](https://python-poetry.org/)) for dependency management and packaging.  So install the poetry tool.  I usually run the conda python distribution at the command line, deactivate conda before installing poetry.
 
 ```
@@ -71,4 +73,14 @@ After updating the package dependencies in `pyproject.toml`, I'll run
 ```
 $ poetry lock
 $ poetry install
+```
+
+### Via conda
+
+Alternatively
+
+```
+$ conda create -n dissipationtheory python=3.8
+$ pip install .[test]
+$ python -m pytest
 ```
