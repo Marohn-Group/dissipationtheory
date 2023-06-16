@@ -59,7 +59,7 @@ ModuleNotFoundError: No module named 'numpy'
 To install the packages run
 
 ```
-$ poetry install
+$ poetry install --all-extras
 ```
 
 and be prepared to wait while the many dependent packages are installed.  We now have a `poetry.lock` file present.  To run the unit tests,
@@ -73,6 +73,15 @@ After updating the package dependencies in `pyproject.toml`, I'll run
 ```
 $ poetry lock
 $ poetry install
+```
+
+Rememember to deactivate any conda environments before you start, to avoid errors resulting from package collisions.  If you are coming back to work on the package, the working commands are
+
+```
+$ conda deactivate
+$ poetry lock
+$ poetry install --all-extras
+$ poetry run pytest
 ```
 
 ### Via conda
