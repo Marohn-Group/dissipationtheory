@@ -84,6 +84,22 @@ $ poetry install --all-extras
 $ poetry run pytest
 ```
 
+### Adding and running jupyter
+
+To install,
+
+```
+$ poetry add -D jupyter
+$ jupyter notebook
+```
+
+Because I want to run the notebook in MS Visual Studio Code, I'll need to create a named Jupyter kernel based on this poetry environment.
+
+```
+$ poetry run ipython kernel install --user --name=dissipationtheory
+Installed kernelspec dissipationtheory in /Users/jam99/Library/Jupyter/kernels/dissipationtheory
+```
+
 ### Via conda
 
 Alternatively

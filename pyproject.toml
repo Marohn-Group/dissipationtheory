@@ -5,6 +5,9 @@ description = "Compute atomic force microscope cantilever dissipation and freque
 authors = ["John A. Marohn <jam99@cornell.edu>"]
 license = "MIT License"
 readme = "README.md"
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+
 
 
 [build-system]
@@ -24,6 +27,7 @@ pytest-cov = { version = ">=3.0.0", optional = true }
 tox = { version = ">=3.24.5", optional = true }
 tox-conda = { version = ">=0.9.2", optional = true}
 pint = "^0.20.1"
+jupyter = "^1.0.0"
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "tox", "tox-conda"]
