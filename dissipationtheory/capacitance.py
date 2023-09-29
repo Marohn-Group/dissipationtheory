@@ -15,7 +15,7 @@ for key in CsphereTermSymbolic.keys():
     CsphereTerm[key] = lambdify([height, R, power], CsphereTermSymbolic[key])
 
 
-def Csphere(index, height, radius, nterm=21):
+def Csphere(index, height, radius, nterm=20):
     """Capacitance (and derivatives) of a sphere above a ground plane.
 
     :param integer index: 0 for capacitance, 1 for 1st derivative, 2 for 2nd derivative
@@ -33,6 +33,25 @@ def Csphere(index, height, radius, nterm=21):
         * CsphereTerm[index](H, radius, n).sum(axis=1).to_base_units()
     )
 
+def CsphereOverSemi(index, height, radius, epsilon, nterm=20):
+    """Capacitance (and derivatives) of a sphere above a dielectric substrate.
+
+    :param integer index: 0 for capacitance, 1 for 1st derivative, 2 for 2nd derivative
+    :param pint.util.Quantity height: sphere-to-plane separation
+    :param pint.util.Quantity radius: sphere radius
+    :param float: real part of the substrates dielectric constant
+    :param int nterm: number of terms in the expansion
+
+    """
+    H = ureg.Quantity(np.outer(height.magnitude, np.ones(nterm)), height.units)
+    n = np.outer(np.ones(len(height)), np.arange(1, nterm + 1))
+    return (
+        4
+        * np.pi
+        * epsilon0
+        * (np.power((1 - (1 / epsilon))/(1 + (1 / epsilon)), n - 1) * \
+          CsphereTerm[index](H, radius, n)).sum(axis=1).to_base_units()
+    )
 
 def main():
     import matplotlib.pylab as plt
