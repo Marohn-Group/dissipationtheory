@@ -292,7 +292,7 @@ class CantileverModelJit(object):
 
     def print(self):  # <=== can't use the __repr__ function :-(
 
-        print("   cantilever freq = ", self.f_c, "Hz") # <== can't use formatting strings here, keep it simple  :-(
+        print("   cantilever freq = ", self.f_c, "Hz") # <== can't use formatting strings here
         print("                   = ", self.omega_c, "rad/s")
         print("tip-sample voltage = ", self.V_ts, "V")
         print("            radius = ", self.R, "m")
