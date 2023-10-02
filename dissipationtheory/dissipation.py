@@ -214,7 +214,7 @@ def C(power, theta, sample):
     
     integral = integrate.quad(theta, 0., np.inf, args=(sample, power))[0]
     
-    return (prefactor * 0.50 * integral).to_base_units()
+    return (prefactor * integral).to_base_units()
 
 def gamma_parallel(theta, sample):
 
@@ -225,7 +225,7 @@ def gamma_parallel(theta, sample):
             radius=sample.cantilever.R, 
             epsilon=sample.epsilon_d.real.magnitude)
 
-    return prefactor * c0 * c0 * C(2, theta, sample)
+    return prefactor * 0.50 * c0 * c0 * C(2, theta, sample)
 
 def gamma_perpendicular(theta, sample):
 
@@ -549,7 +549,7 @@ def C_jit(power, theta, sample):
     
     integral = integrate.quad(theta, 0., np.inf, args=(sample, power))[0]
     
-    return (prefactor * 0.50 * integral).to_base_units()
+    return (prefactor * integral).to_base_units()
 
 def gamma_parallel_jit(theta, sample):
 
@@ -560,7 +560,7 @@ def gamma_parallel_jit(theta, sample):
             radius=ureg.Quantity(sample.cantilever.R,'m'), 
             epsilon=sample.epsilon_d.real)
 
-    return prefactor * c0 * c0 * C_jit(2, theta, sample)
+    return prefactor * 0.50 * c0 * c0 * C_jit(2, theta, sample)
 
 def gamma_perpendicular_jit(theta, sample):
 
