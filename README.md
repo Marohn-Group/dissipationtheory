@@ -41,7 +41,7 @@ $ poetry --version
 Poetry (version 1.4.2)
 ```
 
-There is as yet no python available at the command line.  Next create a `pyproject.toml` file that will specify the virtual environment (i.e., tells poetry what version of python to run and what packages to load).  To create the `pyproject.toml` file I ran `poetry init` and answered the questions.  Afterwards, invoke the virtual enviroment as follows.  Verify that python is now running at the command line.
+There is as yet no python available at the command line.  Next create a `pyproject.toml` file that will specify the virtual environment (i.e., tells poetry what version of python to run and what packages to load).  To create the `pyproject.toml` file I ran `poetry init` and answered the questions.  Afterwards, invoke the virtual environment as follows.  Verify that python is now running at the command line.
 
 ```
 $ poetry shell
