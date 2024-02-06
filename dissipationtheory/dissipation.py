@@ -303,7 +303,7 @@ def gamma_perpendicular_approx(rho, sample):
             d = sample.cantilever.d
             t5 = c1**2/d - (c0 * c1)/d**2 + (0.5 * c0**2)/d**3
 
-            gamma[index] = (t1 + 0.0 * t2 * t3) * t4 * t5
+            gamma[index] = (t1 + t2 * t3) * t4 * t5
             mask[index] = True
     
     return rho.to('1/m^3')[mask], gamma.to('pN s/m')[mask]
