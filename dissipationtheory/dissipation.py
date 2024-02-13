@@ -1,6 +1,7 @@
 import numpy as np
 import cmath
 from dissipationtheory.constants import ureg, epsilon0, qe, kb
+from dissipationtheory.capacitance import Csphere
 from dissipationtheory.capacitance import CsphereOverSemi
 from scipy import integrate
 from numba import jit
