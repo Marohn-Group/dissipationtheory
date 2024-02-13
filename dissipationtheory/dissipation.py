@@ -620,6 +620,40 @@ def gamma_perpendicular_jit(theta, sample):
 
     return prefactor * (t1 + t2 + t3)
 
+def gamma_perpendicular_fit(x, a, R, fc):
+    """Compute the friction experienced by a cantilever oscillating in the perpendicular orientation 
+    over a conductive substrate, in the low-conductivity limit.  The function computes the tip-sample
+    capacitance assuming the sample is metallic.  Because the inputs and outputs of this function are 
+    unitless, the function is suitable for curve fitting.
+    
+    inputs:
+        x (float): tip-sample separation [nm]
+        a (float): sample-conductivity parameter [unitless]
+        R (float): tip radius [nm]
+        fc (float): cantilever frequency [Hz]
+
+    output:
+        voltage-normalized cantilever dissipation constant [pN s/(V^2 m)]
+    """
+
+    h = ureg.Quantity(x, 'nm')
+    r = ureg.Quantity(R, 'nm')
+    
+    c0 = Csphere(0, height=h, radius=r, nterm=21)
+    c1 = Csphere(1, height=h, radius=r, nterm=21)
+    
+    d = h + r
+    
+    t1 = (c0 * c0)/(2 * d**3)
+    t2 = - (c0*c1)/d**2
+    t3 = (c1 * c1)/d
+    
+    omega = 2 * np.pi * ureg.Quantity(fc, '1/s')
+    prefactor = 1/(4 * np.pi * epsilon0 * omega)
+    expression = (prefactor * (t1 + t2 + t3)).to('pN s/(V^2 m)').magnitude
+    
+    return a * expression
+
 def main():
 
     sample1 = SampleModel1(
