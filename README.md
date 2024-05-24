@@ -4,13 +4,30 @@ Compute atomic force microscope cantilever dissipation and frequency noise over 
 
 ## Theory
 
-This package impliments models of tip-sample capacitance used in the following sources.
+This package implements models of tip-sample capacitance, friction, frequency noise, and frequency shift published in the following manuscripts.
 
-1. [**Hoepker2011oct**] Dielectric Fluctuations over Polymer Films Detected Using an Atomic Force Microscope. Nikolas Hoepker, Swapna Lekkala, Roger F. Loring, and John A. Marohn. *J. Phys. Chem. B* (2011) 115(49):14493-14500; https://doi.org/10.1021/jp207387d.  Equations 4 (frequency shift) and 22 (cone-plane capacitance).  The paper directs you to the supplement for the cone-plane capacitance, but the information is not there (sorry). 
+1. [**Cherniavskaya2003feb**] Cherniavskaya, O.; Chen, L.; Weng, V.; Yuditsky, L.; Brus, L. E. Quantitative Noncontact Electrostatic Force Imaging of Nanocrystal Polarizability. *J. Phys. Chem. B* **2003**, *107 (7)*, 1525. https://doi.org/10.1021/jp0265438. Figure 4 is helpful.  Equation 19 (cone-plane capacitance second derivative).
 
-2. [**Hoepker2013jan**] Fluctuations near Thin Films of Polymers, Organic Photovoltaics, and Organic Semiconductors Probed by Electric Force Microscopy. Nikolas C Hoepker. Cornell University, 2013; http://hdl.handle.net/1813/33910.  Equations 2.49 (cone-plane capacitance) and equations 2.51 and 2.52 (sphere-plane capacitance).
+2. [**Kuehn2006apr**] Kuehn, S.; Loring, R. F.; Marohn, J. A. Dielectric Fluctuations and the Origins of Noncontact Friction. *Phys. Rev. Lett.* **2006**, *96 (15)*, 156103. https://doi.org/10.1103/PhysRevLett.96.156103.
 
-3. [**Cherniavskaya2003feb**] Quantitative Noncontact Electrostatic Force Imaging of Nanocrystal Polarizability. Oksana Cherniavskaya, Liwei Chen, Vivian Weng, Leonid Yuditsky, and Louis E. Brus. *J. Phys. Chem. B* (2003) 107(7):1525-1531; https://doi.org/10/fqzfmz.  Figure 4 is helpful.  Equation 19 (cone-plane capacitance second derivative).
+3. [**Yazdanian2008jun**] Yazdanian, S. M.; Marohn, J. A.; Loring, R. F. Dielectric Fluctuations in Force Microscopy: {N}oncontact Friction and Frequency Jitter. *J. Chem. Phys.* **2008**, *128 (22)*, 224706. https://doi.org/10.1063/1.2932254.
+
+4. [**Yazdanian2009jun**] Yazdanian, S. M.; Hoepker, N.; Kuehn, S.; Loring, R. F.; Marohn, J. A. Quantifying Electric Field Gradient Fluctuations over Polymers Using Ultrasensitive Cantilevers. *Nano Lett.* **2009**, *9 (6)*, 2273. https://doi.org/10.1021/nl9004332.  Supplement to: Quantifying Electric Field Gradient Fluctuations over Polymers Using Ultrasensitive Cantilevers. *Nano Lett.* **2009**, *9 (10)*, 3668. https://doi.org/10.1021/nl901850b.
+
+5. [**Hoepker2011dec**] Hoepker, N.; Lekkala, S.; Loring, R. F.; Marohn, J. A. Dielectric Fluctuations over Polymer Films Detected Using an Atomic Force Microscope. *J. Phys. Chem. B* **2011**, *115 (49)*, 14493. https://doi.org/10.1021/jp207387d.  Equations 4 (frequency shift) and 22 (cone-plane capacitance).  The paper directs you to the supplement for the cone-plane capacitance, but the information is not there (sorry).
+
+6. [**Hoepker2013jan**] Hoepker, N.  Fluctuations near Thin Films of Polymers, Organic Photovoltaics, and Organic Semiconductors Probed by Electric Force Microscopy.  PhD thesis, Cornell University **2013**. http://hdl.handle.net/1813/33910.  Equations 2.49 (cone-plane capacitance) and equations 2.51 and 2.52 (sphere-plane capacitance).
+
+7. [**Lekkala2012sep**] Lekkala, S.; Hoepker, N.; Marohn, J. A.; Loring, R. F. Charge Carrier Dynamics and Interactions in Electric Force Microscopy. *J. Chem. Phys.* **2012**, *137 (12)*, 124701. https://doi.org/10.1063/1.4754602.
+
+8. [**Lekkala2013nov**] Lekkala, S.; Marohn, J. A.; Loring, R. F. Electric Force Microscopy of Semiconductors: Theory of Cantilever Frequency Fluctuations and Noncontact Friction. *J. Chem. Phys.* **2013**, *139 (18)*, 184702. https://doi.org/10.1063/1.4828862.
+
+We plan to incorporate equations from the following two papers in the near future.
+
+9. [**Loring2022sep**] Loring, R. F. Noncontact Friction in Electric Force Microscopy over a Conductor with Nonlocal Dielectric Response. *J. Phys. Chem. A* **2022**, *126 (36)*, 6309. https://doi.org/10.1021/acs.jpca.2c04428.
+
+10. [**Loring2023jul**] Loring, R. F. Voltage Fluctuations and Probe Frequency Jitter in Electric Force Microscopy of a Conductor. *J. Chem. Phys.* **2023**, *159 (4)*, 044703. https://doi.org/10.1063/5.0160556.
+
 
 ## Installation
 
