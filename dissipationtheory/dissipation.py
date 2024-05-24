@@ -134,7 +134,8 @@ class SampleModel2(object):
         return str
 
 def mysech(x):
-    
+    """Define my own sech() function to avoid overflow problems."""
+
     x = np.array(x)
     mask = abs(x.real) < 710.4
     values = np.zeros_like(x, dtype=complex)
@@ -143,7 +144,8 @@ def mysech(x):
     return values
 
 def mycsch(x):
-    
+    """Define my own csch() function to avoid overflow problems."""
+
     x = np.array(x)
     mask = abs(x.real) < 710.4
     values = np.zeros_like(x, dtype=complex)
