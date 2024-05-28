@@ -1,7 +1,6 @@
 from dissipationtheory.constants import kb, Troom, qe
 import pytest
 
-
 def test_Troom():
     """kb T/q is approximately 25.693 mV at room temperature"""
     c = (kb*Troom/qe).to('mV').magnitude
