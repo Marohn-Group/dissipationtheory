@@ -10,7 +10,24 @@ from numba.experimental import jitclass
 from numba import deferred_type
 
 class CantileverModel(object):
+    """Cantilever object.  
+    SI units for each parameter are indicated below.
+    A parameter can be given in any equivalent unit using the units package ``pint``.
+    For example, :: 
+    
+        from dissipationtheory.constants import ureg
+        R = ureg.Quantity(50., 'nm')
+    
+    :param f_c: cantilever frequency [Hz] 
+    :type f_c: ureg.Quantity
+    :param V_ts: tip-sample voltage [V]
+    :type V_ts: ureg.Quantity
+    :param R: tip radius [m]
+    :type R: ureg.Quantity
+    :param d: tip-sample separation [m]
+    :type d: ureg.Quantity
 
+    """
     def __init__(self, f_c, V_ts, R, d):
 
         self.f_c = f_c
@@ -20,6 +37,7 @@ class CantileverModel(object):
 
     @property
     def omega_c(self):
+        """Cantilever resonance frequency in units of radians/second."""
         return 2 * np.pi * self.f_c
 
     def __repr__(self):
@@ -34,7 +52,28 @@ class CantileverModel(object):
         return str
 
 class SampleModel1(object):
+    """Model I sample object defined in Lekkala2013nov, Fig. 1(b)::
     
+        cantilever | vacuum gap | semiconductor | dielectric
+    
+    The dielectric substrate is semi-infinite.
+    
+    :param cantilever: an object storing the cantilever properties, including the tip-sample separation, i.e. the vacuum-gap thickness
+    :type CantileverModel: cantilever
+    :param epsilon_s: semiconductor layer's complex relative dielectric constant [unitless]
+    :type epsilon_s: ureg.Quantity
+    :param h_s: semiconductor layer's thickness [m]
+    :type h_s: ureg.Quantity
+    :param mu: semiconductor layer's charge mobility [m^2/Vs]
+    :type mu: ureg.Quantity
+    :param rho: semiconductor layer's charge density [1/m^3]
+    :type rho: ureg.Quantity
+    :param epsilon_d: dielectric layer's complex relative dielectric constant [unitless]
+    :type epsilon_d: ureg.Quantity
+    :param z_r: reference height [m] (used in computations)
+    :type z_r: ureg.Quantity
+    """
+
     def __init__(self, cantilever, h_s, epsilon_s, mu, rho, epsilon_d, z_r):
 
         self.cantilever = cantilever
@@ -47,18 +86,22 @@ class SampleModel1(object):
 
     @property
     def D(self):
+        """Diffusion constant."""
         return ((kb * ureg.Quantity(300., 'K') * self.mu) / qe).to('m^2/s')
 
     @property
     def Ld(self):
+        """Diffusion length."""
         return (np.sqrt(self.D / self.cantilever.omega_c)).to('nm')
     
     @property
     def LD(self):
+        """Debye length."""
         return (np.sqrt((epsilon0 * kb * ureg.Quantity(300., 'K'))/(self.rho * qe * qe))).to('nm')
 
     @property
     def epsilon_eff(self):
+        """Effective relative complex dielectric constant."""
         return (self.epsilon_s - complex(0,1) * self.Ld**2 / self.LD**2).to_base_units()
 
     def __repr__(self):
@@ -84,7 +127,28 @@ class SampleModel1(object):
         return str
 
 class SampleModel2(object):
+    """Model II sample object defined in Lekkala2013nov, Fig. 1(b)::
     
+        cantilever | vacuum gap | dielectric | semiconductor 
+    
+    The semiconductor substrate is semi-infinite.
+    
+    :param cantilever: an object storing the cantilever properties, including the tip-sample separation, i.e. the vacuum-gap thickness
+    :type CantileverModel: cantilever
+    :param epsilon_d: dielectric layer's complex relative dielectric constant [unitless]
+    :type epsilon_d: ureg.Quantity
+    :param h_d: dielectric layer's thickness [m]
+    :type h_d: ureg.Quantity
+    :param epsilon_s: semiconductor layer's complex relative dielectric constant [unitless]
+    :type epsilon_s: ureg.Quantity
+    :param mu: semiconductor layer's charge mobility [m^2/Vs]
+    :type mu: ureg.Quantity
+    :param rho: semiconductor layer's charge density [1/m^3]
+    :type rho: ureg.Quantity
+    :param z_r: reference height [m] (used in computations)
+    :type z_r: ureg.Quantity
+    """
+
     def __init__(self, cantilever, epsilon_d, h_d, epsilon_s, mu, rho, z_r):
 
         self.cantilever = cantilever
@@ -97,18 +161,22 @@ class SampleModel2(object):
 
     @property
     def D(self):
+        """Diffusion constant."""
         return ((kb * ureg.Quantity(300., 'K') * self.mu) / qe).to('m^2/s')
 
     @property
     def Ld(self):
+        """Diffusion length."""
         return (np.sqrt(self.D / self.cantilever.omega_c)).to('nm')
     
     @property
     def LD(self):
+        """Debye length."""
         return (np.sqrt((epsilon0 * kb * ureg.Quantity(300., 'K'))/(self.rho * qe * qe))).to('nm')
 
     @property
     def epsilon_eff(self):
+        """Effective relative complex dielectric constant."""
         return (self.epsilon_s - complex(0,1) * self.Ld**2 / self.LD**2).to_base_units()
 
     def __repr__(self):
@@ -134,7 +202,7 @@ class SampleModel2(object):
         return str
 
 def mysech(x):
-    """Define my own sech() function to avoid overflow problems."""
+    """Define my own ``sech()`` function to avoid overflow problems."""
 
     x = np.array(x)
     mask = abs(x.real) < 710.4
@@ -144,7 +212,7 @@ def mysech(x):
     return values
 
 def mycsch(x):
-    """Define my own csch() function to avoid overflow problems."""
+    """Define my own ``csch()`` function to avoid overflow problems."""
 
     x = np.array(x)
     mask = abs(x.real) < 710.4
@@ -220,6 +288,7 @@ def C(power, theta, sample):
     return (prefactor * integral).to_base_units()
 
 def gamma_parallel(theta, sample):
+    """Compute :math:`\\gamma_{\\parallel}`."""
 
     prefactor = (sample.cantilever.V_ts**2 / (kb * ureg.Quantity(300., 'K'))).to('V/C')
     
@@ -231,6 +300,7 @@ def gamma_parallel(theta, sample):
     return prefactor * 0.50 * c0 * c0 * C(2, theta, sample)
 
 def gamma_perpendicular(theta, sample):
+    """Compute :math:`\\gamma_{\\perp}`."""
 
     prefactor = (sample.cantilever.V_ts**2 / (kb * ureg.Quantity(300., 'K'))).to('V/C')
 
@@ -240,6 +310,7 @@ def gamma_perpendicular(theta, sample):
     return prefactor * (c1 * c1 * C(0 , theta, sample) + 2 * c0 * c1 * C(1, theta, sample) + c0 * c0 * C(2, theta, sample))
 
 def gamma_parallel_approx(rho, sample):
+    """Low-density expansion for :math:`\\gamma_{\\parallel}`."""
 
     c0 = CsphereOverSemi(index=0, 
         height=sample.cantilever.d * np.ones(1), 
@@ -274,6 +345,7 @@ def gamma_parallel_approx(rho, sample):
     return rho.to('1/m^3')[mask], gamma.to('pN s/m')[mask]
 
 def gamma_perpendicular_approx(rho, sample):
+    """Low-density expansion for :math:`\\gamma_{\\perp}`."""
 
     c0 = CsphereOverSemi(index=0, 
         height=sample.cantilever.d * np.ones(1), 
@@ -475,8 +547,8 @@ class SampleModel2Jit(object):
         print("effective epsilon (real) = ", self.epsilon_eff.real)
         print("effective epsilon (imag) = ", self.epsilon_eff.imag)
 
-# In the theta1norm_jit() and theta2norm_jit() functions below, 
-#  jit needs an actual instance of the function input "sample" to compile the code
+# To compile the theta1norm_jit() and theta2norm_jit() functions, jit needs an actual 
+#    instance of the function input "sample". 
 
 sample1 = SampleModel1Jit(
     cantilever=CantileverModelJit(81.0e3, 3.,  80E-9, 300E-9),
@@ -498,7 +570,7 @@ sample2 = SampleModel2Jit(
 
 @jit(complex128(complex128), nopython=True)
 def mysech_jit(x):
-
+    """Define my own just-in-time-compiled ``sech()`` function to avoid overflow problems."""
     if x.real < 710.4:
         return 1/np.cosh(x)
     else:
@@ -506,7 +578,7 @@ def mysech_jit(x):
 
 @jit(complex128(complex128), nopython=True)
 def mycsch_jit(x):
-    
+    """Define my own just-in-time-compiled ``csch()`` function to avoid overflow problems."""
     if x.real < 710.4:
         return 1/np.sinh(x)
     else:

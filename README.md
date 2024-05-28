@@ -101,6 +101,22 @@ $ poetry install --all-extras
 $ poetry run pytest
 ```
 
+Note: I upgraded the python version in the `.toml` file from 3.8 to 3.9 but then got an error trying to launch `poetry shell`.  First I have to run
+
+```
+$ poetry env use 3.9
+```
+
+which sets up a new virtual environment.  Now I can proceed with adding a package that requires python 3.9, like sphinx
+
+```
+$ poetry add sphinx
+$ poetry lock
+$ poetry install --all-extras
+$ poetry run pytest
+```
+
+
 ### Adding and running jupyter
 
 To install,

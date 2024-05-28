@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dissipationtheory"
-version = "0.1.0"
+version = "1.0"
 description = "Compute atomic force microscope cantilever dissipation and frequency noise over metals and dielectrics.  Compute cantilever capacitance using a sphere plus a cone model."
 authors = ["John A. Marohn <jam99@cornell.edu>"]
 license = "MIT License"
@@ -14,7 +14,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.9"
 pandas = "1.5.3"
 numpy = "^1.24"
 sympy = "^1.11.1"
@@ -28,15 +28,30 @@ pint = "^0.20.1"
 jupyter = "^1.0.0"
 tqdm = "^4.66"
 numba = "^0.58"
+sphinx = "^7.3.7"
+sphinx-rtd-theme = "^2.0.0"
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "tox", "tox-conda"]
-
 
 [tool.coverage.run]
 # pytest coverage
 source_pkgs = ['dissipationtheory']
 omit = ['tests/*']
+
+# This is to avoid
+#  Users/jam99/Library/Caches/pypoetry/virtualenvs/dissipationtheory-Uvi85QQO-py3.9/lib/python3.9/site-packages/pint/facets/numpy/quantity.py:271: 
+# DeprecationWarning: Conversion of an array with ndim > 0 to a 
+# scalar is deprecated, and will error in future. Ensure you extract a single 
+# element from your array before performing this operation. (Deprecated NumPy 
+# 1.25.)
+#    self._magnitude[key] = factor.magnitude
+#
+#
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning"]
+# 
+# Instead: $ poetry run pytest -W ignore::DeprecationWarning
 
 
 [tool.tox]
