@@ -307,15 +307,12 @@ def gamma_perpendicular(theta, sample):
     c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_d.real.magnitude)        
     c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_d.real.magnitude)
     
-    return prefactor * (c1 * c1 * C(0 , theta, sample) + 2 * c0 * c1 * C(1, theta, sample) + c0 * c0 * C(2, theta, sample))
+    return prefactor * (c1 * c1 * C(0 , theta, sample) - 2 * c0 * c1 * C(1, theta, sample) + c0 * c0 * C(2, theta, sample))
 
 def gamma_parallel_approx(rho, sample):
     """Low-density expansion for :math:`\\gamma_{\\parallel}`."""
 
-    c0 = CsphereOverSemi(index=0, 
-        height=sample.cantilever.d * np.ones(1), 
-        radius=sample.cantilever.R, 
-        epsilon=sample.epsilon_s.real.magnitude)
+    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)   
     
     qc = c0 * sample.cantilever.V_ts
 
@@ -334,10 +331,10 @@ def gamma_parallel_approx(rho, sample):
 
             t1 = - sample.epsilon_s.imag/(np.abs(sample.epsilon_s + 1)**2)
             t2 = (qc * qc)/(16 * np.pi * epsilon0 * sample.cantilever.omega_c * sample.cantilever.d**3)
-
             t3 =  (qc * qc)/(16 * np.pi * epsilon0 * sample.cantilever.omega_c**2)
             t4 = ((1 + sample.epsilon_s.real)**2 - (sample.epsilon_s.imag)**2)/(np.abs(sample.epsilon_s + 1)**4)
-            t5 = sample.D/(sample.LD**2 * sample.cantilever.d**3)
+            d = sample.cantilever.d 
+            t5 = sample.D/(sample.LD**2 * d**3)
 
             gamma[index] = t1 * t2 + t3 * t4 * t5
             mask[index] = True
@@ -346,37 +343,30 @@ def gamma_parallel_approx(rho, sample):
 
 def gamma_perpendicular_approx(rho, sample):
     """Low-density expansion for :math:`\\gamma_{\\perp}`."""
-
-    c0 = CsphereOverSemi(index=0, 
-        height=sample.cantilever.d * np.ones(1), 
-        radius=sample.cantilever.R, 
-        epsilon=sample.epsilon_s.real.magnitude)
-
-    c1 = CsphereOverSemi(index=1, 
-        height=sample.cantilever.d * np.ones(1), 
-        radius=sample.cantilever.R, 
-        epsilon=sample.epsilon_s.real.magnitude)
     
+    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)        
+    c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
+
     rho_x = ((sample.cantilever.omega_c * epsilon0)/(qe * sample.mu)).to('1/m^3').magnitude
-    r2  = ((sample.epsilon_s.real**2 
-            + sample.epsilon_s.imag**2)/sample.epsilon_s.real).to('dimensionless').magnitude
+    r2  = ((sample.epsilon_s.real**2 + sample.epsilon_s.imag**2)/sample.epsilon_s.real).to('dimensionless').magnitude
     rho2crit = r2 * rho_x
 
     gamma = ureg.Quantity(np.zeros(len(rho)), 'pN s/m')
     mask = np.zeros(len(rho), dtype=bool)
 
+    t1 = - sample.epsilon_s.imag/(np.abs(sample.epsilon_s + 1)**2)
+    t2 = ((1 + sample.epsilon_s.real)**2 - (sample.epsilon_s.imag)**2)/(np.abs(sample.epsilon_s + 1)**4)     
+    t4= sample.cantilever.V_ts**2/(4 * np.pi * epsilon0 * sample.cantilever.omega_c)
+    d = sample.cantilever.d
+    t5 = (c1**2)/(d) - (c0 * c1)/(d**2) + (c0**2)/(2 * d**3)
+        
     for index, rho_ in enumerate(rho):
 
         sample.rho = rho_
 
         if (rho_.to('1/m^3').magnitude <= rho2crit):
-
-            t1 = - sample.epsilon_s.imag/(np.abs(sample.epsilon_s + 1)**2)
-            t2 = ((1 + sample.epsilon_s.real)**2 - (sample.epsilon_s.imag)**2)/(np.abs(sample.epsilon_s + 1)**4)
+       
             t3 = sample.Ld**2/sample.LD**2
-            t4= sample.cantilever.V_ts**2/(4 * np.pi * epsilon0 * sample.cantilever.omega_c)
-            d = sample.cantilever.d
-            t5 = c1**2/d - (c0 * c1)/d**2 + (0.5 * c0**2)/d**3
 
             gamma[index] = (t1 + t2 * t3) * t4 * t5
             mask[index] = True

@@ -1,7 +1,10 @@
 import unittest
 from dissipationtheory.constants import ureg
-from dissipationtheory.dissipation import CantileverModel, SampleModel1, theta1norm, gamma_parallel, gamma_parallel_approx
-from dissipationtheory.dissipation import CantileverModelJit, SampleModel1Jit, theta1norm_jit, gamma_parallel_jit
+from dissipationtheory.dissipation import CantileverModel, SampleModel1, SampleModel2
+from dissipationtheory.dissipation import theta1norm, theta2norm, gamma_parallel, gamma_perpendicular
+from dissipationtheory.dissipation import gamma_parallel_approx, gamma_perpendicular_approx
+from dissipationtheory.dissipation import CantileverModelJit, SampleModel1Jit, SampleModel2Jit
+from dissipationtheory.dissipation import theta1norm_jit, theta2norm_jit, gamma_parallel_jit, gamma_perpendicular_jit
 import pandas as pd
 import numpy as np
 import os
@@ -25,6 +28,16 @@ class TestDissipationMethods(unittest.TestCase):
             mu = ureg.Quantity(2.7E-10, 'm^2/(V s)'),
             rho = ureg.Quantity(1e21, '1/m^3'),
             epsilon_d = ureg.Quantity(complex(11.9, -0.05), ''),
+            z_r = ureg.Quantity(300, 'nm')
+        )
+
+        self.sample2 = SampleModel2(
+            cantilever = self.cantilever,
+            h_d = ureg.Quantity(0., 'nm'),
+            epsilon_d = ureg.Quantity(complex(11.9, -0.05), ''),
+            epsilon_s = ureg.Quantity(complex(11.9, -0.05), ''),
+            mu = ureg.Quantity(2.7e-10, 'm^2/(V s)'),
+            rho = ureg.Quantity(1e21, '1/m^3'),
             z_r = ureg.Quantity(300, 'nm')
         )
 
@@ -53,8 +66,9 @@ class TestDissipationMethods(unittest.TestCase):
         self.assertEqual(0.300, self.cantilever.d.to('um').magnitude)
 
     def test_Lekkala2013nov_Fig7b(self):
-        """Reproduce the friction calculation in Lekkala2013nov, Fig. 7(b), the 
-        :math:`\\mu = 2.7 \\times 10^{-10} \\: \\mathrm{m}^2 \\: \\mathrm{V}^{-1} \\: \\mathrm{s}^{-1}` case.
+        """Reproduce the parallel friction :math:`\\gamma_{\\parallel}` 
+        calculation in Lekkala2013nov, Fig. 7(b), with 
+        :math:`\\mu = 2.7 \\times 10^{-10} \\: \\mathrm{m}^2 \\: \\mathrm{V}^{-1} \\: \\mathrm{s}^{-1}`.
         Lekkala performed the calculation in *Mathematica* and the code no longer exists.
         The data is from ``Lekkala2013--Fig7b--2.7e-10.csv``.
         This data was created by digitizing the paper figure.
@@ -117,7 +131,6 @@ class TestDissipationMethods(unittest.TestCase):
             sample1_jit.rho = rho__.to('1/m^3').magnitude
             gamma1[index] = gamma_parallel_jit(theta1norm_jit, sample1_jit).to('pN s/m')
 
-            x = rho__.to('1/m^3').magnitude
             y0 = gamma0[index].to('pN s/m').magnitude
             y1 = gamma1[index].to('pN s/m').magnitude
 
@@ -125,8 +138,8 @@ class TestDissipationMethods(unittest.TestCase):
 
         self.assertLess(np.abs(err).mean(), 0.15)
 
-    def test_low_density_approx(self):
-        """Test the exact numerical answer against the low-density approximation.
+    def test_low_density_approx_parallel(self):
+        """Test the exact numerical answer for :math:`\\gamma_{\\parallel}` for Sample I against a low-density approximation.
         See ``development/dissipation-theory--Study-4.html``.
         For this test, we create a list of densities below the turning point where the low-density expansion is valid.
         The maximum difference between the exact answer and the low-density expansion should be less than 2.5 percent.
@@ -135,19 +148,16 @@ class TestDissipationMethods(unittest.TestCase):
         rho_trial = ureg.Quantity(np.logspace(start=np.log10(1e15), stop=np.log10(1e23), num=9), '1/m^3')
         (rho1, gamma1) = gamma_parallel_approx(rho_trial, self.sample1)
 
-        gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
-        err = np.zeros_like(rho1)
-
         # make a copy since we are going to overwrite elements
-    
         sample1 = deepcopy(self.sample1)
 
+        gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
+        err = np.zeros_like(rho1)       
         for index, rho_ in enumerate(rho1):
 
             sample1.rho = rho_
             gamma0[index] = gamma_parallel(theta1norm, sample1)
 
-            x = rho_.to('1/m^3').magnitude
             y0 = gamma0[index].to('pN s/m').magnitude
             y1 = gamma1[index].to('pN s/m').magnitude
 
@@ -155,18 +165,15 @@ class TestDissipationMethods(unittest.TestCase):
 
         self.assertLess(np.abs(err).max(), 0.025)
 
-    def test_low_density_approx_JIT(self):
+    def test_low_density_approx_parallel_JIT(self):
         """Reproduce ``test_low_density_approx`` using JIT versions of all the objects and functions."""
 
         rho_trial = ureg.Quantity(np.logspace(start=np.log10(1e15), stop=np.log10(1e23), num=9), '1/m^3')
         (rho1, gamma1) = gamma_parallel_approx(rho_trial, self.sample1)
 
-        gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
-        err = np.zeros_like(rho1)
-
         # Make a local copy since we are going to overwrite elements.
         # Can't use deepcopy() on a jit-class object, to copy elements manually.
-
+        #
         sample1_jit = SampleModel1Jit(
             cantilever = self.cantilever_jit,
             h_s = self.sample1_jit.h_s,
@@ -177,12 +184,36 @@ class TestDissipationMethods(unittest.TestCase):
             z_r = self.sample1_jit.z_r
         )
 
+        gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
+        err = np.zeros_like(rho1)
         for index, rho_ in enumerate(rho1):
 
             sample1_jit.rho = rho_.to('1/m^3').magnitude
             gamma0[index] = gamma_parallel_jit(theta1norm_jit, sample1_jit).to('pN s/m')
 
-            x = rho_.to('1/m^3').magnitude
+            y0 = gamma0[index].to('pN s/m').magnitude
+            y1 = gamma1[index].to('pN s/m').magnitude
+
+            err[index] = (y1 - y0)/y0
+
+        self.assertLess(np.abs(err).max(), 0.025)
+
+    def test_low_density_approx_perpendicular(self):
+        """Test the exact numerical answer for :math:`\\gamma_{\\perp}` for Sample II against a low-density approximation."""
+
+        rho_trial = ureg.Quantity(np.logspace(start=np.log10(1e15), stop=np.log10(1e23), num=9), '1/m^3')
+        (rho1, gamma1) = gamma_perpendicular_approx(rho_trial, self.sample2)
+
+        # make a copy since we are going to overwrite elements
+        sample2 = deepcopy(self.sample2)
+
+        gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
+        err = np.zeros_like(rho1)       
+        for index, rho_ in enumerate(rho1):
+
+            sample2.rho = rho_
+            gamma0[index] = gamma_perpendicular(theta2norm, sample2)
+
             y0 = gamma0[index].to('pN s/m').magnitude
             y1 = gamma1[index].to('pN s/m').magnitude
 
