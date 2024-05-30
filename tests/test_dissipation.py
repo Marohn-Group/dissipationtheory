@@ -8,7 +8,6 @@ from dissipationtheory.dissipation import theta1norm_jit, theta2norm_jit, gamma_
 import pandas as pd
 import numpy as np
 import os
-from copy import deepcopy 
 
 class TestDissipationMethods(unittest.TestCase):
 
@@ -58,6 +57,16 @@ class TestDissipationMethods(unittest.TestCase):
             z_r = 300e-9
         )
 
+        self.sample2_jit = SampleModel2Jit(
+            cantilever = self.cantilever_jit,
+            h_d = 0,
+            epsilon_d = complex(11.9, -0.05),
+            epsilon_s = complex(11.9, -0.05),
+            mu = 2.7e-10,
+            rho = 1e21,
+            z_r = 300e-9
+        )
+
     def test_cantilever_model(self):
         """Enter the tip-sample separation in nanometers and check that it comes out 
         right in micrometers.
@@ -85,13 +94,11 @@ class TestDissipationMethods(unittest.TestCase):
         gamma1 = ureg.Quantity(np.zeros_like(rho1_), 'pN s/m')
         err = np.zeros_like(rho1_)
 
-        # make a copy since we are going to overwrite elements
-        sample1 = deepcopy(self.sample1)
-
+        rho_original = self.sample1.rho
         for index, rho__ in enumerate(rho1_):
 
-            sample1.rho = rho__
-            gamma1[index] = gamma_parallel(theta1norm, sample1)
+            self.sample1.rho = rho__
+            gamma1[index] = gamma_parallel(theta1norm, self.sample1)
 
             x = rho__.to('1/m^3').magnitude
             y0 = gamma0[index].to('pN s/m').magnitude
@@ -99,6 +106,7 @@ class TestDissipationMethods(unittest.TestCase):
 
             err[index] = (y1 - y0)/y0
 
+        self.sample1.rho = rho_original
         self.assertLess(np.abs(err).mean(), 0.15) 
 
     def test_Lekkala2013nov_Fig7b_JIT(self):    
@@ -113,29 +121,18 @@ class TestDissipationMethods(unittest.TestCase):
         gamma1 = ureg.Quantity(np.zeros_like(rho1_), 'pN s/m')
         err = np.zeros_like(rho1_)
 
-        # Make a local copy since we are going to overwrite elements.
-        # Can't use deepcopy() on a jit-class object, to copy elements manually.
-
-        sample1_jit = SampleModel1Jit(
-            cantilever = self.cantilever_jit,
-            h_s = self.sample1_jit.h_s,
-            epsilon_s = self.sample1_jit.epsilon_s,
-            mu = self.sample1_jit.mu,
-            rho = self.sample1_jit.rho,
-            epsilon_d = self.sample1_jit.epsilon_d,
-            z_r = self.sample1_jit.z_r
-        )
-
+        rho_original = self.sample1_jit.rho
         for index, rho__ in enumerate(rho1_):
 
-            sample1_jit.rho = rho__.to('1/m^3').magnitude
-            gamma1[index] = gamma_parallel_jit(theta1norm_jit, sample1_jit).to('pN s/m')
+            self.sample1_jit.rho = rho__.to('1/m^3').magnitude
+            gamma1[index] = gamma_parallel_jit(theta1norm_jit, self.sample1_jit).to('pN s/m')
 
             y0 = gamma0[index].to('pN s/m').magnitude
             y1 = gamma1[index].to('pN s/m').magnitude
 
             err[index] = (y1 - y0)/y0
 
+        self.sample1_jit.rho = rho_original
         self.assertLess(np.abs(err).mean(), 0.15)
 
     def test_low_density_approx_parallel(self):
@@ -147,55 +144,43 @@ class TestDissipationMethods(unittest.TestCase):
 
         rho_trial = ureg.Quantity(np.logspace(start=np.log10(1e15), stop=np.log10(1e23), num=9), '1/m^3')
         (rho1, gamma1) = gamma_parallel_approx(rho_trial, self.sample1)
-
-        # make a copy since we are going to overwrite elements
-        sample1 = deepcopy(self.sample1)
-
+        
         gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
-        err = np.zeros_like(rho1)       
+        err = np.zeros_like(rho1)     
+        rho_original = self.sample1.rho
         for index, rho_ in enumerate(rho1):
 
-            sample1.rho = rho_
-            gamma0[index] = gamma_parallel(theta1norm, sample1)
+            self.sample1.rho = rho_
+            gamma0[index] = gamma_parallel(theta1norm, self.sample1)
 
             y0 = gamma0[index].to('pN s/m').magnitude
             y1 = gamma1[index].to('pN s/m').magnitude
 
             err[index] = (y1 - y0)/y0
 
+        self.sample1.rho = rho_original
         self.assertLess(np.abs(err).max(), 0.025)
 
     def test_low_density_approx_parallel_JIT(self):
-        """Reproduce ``test_low_density_approx`` using JIT versions of all the objects and functions."""
+        """Reproduce ``test_low_density_approx_parallel()`` using JIT versions of all the objects and functions."""
 
         rho_trial = ureg.Quantity(np.logspace(start=np.log10(1e15), stop=np.log10(1e23), num=9), '1/m^3')
         (rho1, gamma1) = gamma_parallel_approx(rho_trial, self.sample1)
 
-        # Make a local copy since we are going to overwrite elements.
-        # Can't use deepcopy() on a jit-class object, to copy elements manually.
-        #
-        sample1_jit = SampleModel1Jit(
-            cantilever = self.cantilever_jit,
-            h_s = self.sample1_jit.h_s,
-            epsilon_s = self.sample1_jit.epsilon_s,
-            mu = self.sample1_jit.mu,
-            rho = self.sample1_jit.rho,
-            epsilon_d = self.sample1_jit.epsilon_d,
-            z_r = self.sample1_jit.z_r
-        )
-
         gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
         err = np.zeros_like(rho1)
+        rho_original = self.sample1_jit.rho
         for index, rho_ in enumerate(rho1):
 
-            sample1_jit.rho = rho_.to('1/m^3').magnitude
-            gamma0[index] = gamma_parallel_jit(theta1norm_jit, sample1_jit).to('pN s/m')
+            self.sample1_jit.rho = rho_.to('1/m^3').magnitude
+            gamma0[index] = gamma_parallel_jit(theta1norm_jit, self.sample1_jit).to('pN s/m')
 
             y0 = gamma0[index].to('pN s/m').magnitude
             y1 = gamma1[index].to('pN s/m').magnitude
 
             err[index] = (y1 - y0)/y0
 
+        self.sample1_jit.rho = rho_original
         self.assertLess(np.abs(err).max(), 0.025)
 
     def test_low_density_approx_perpendicular(self):
@@ -204,19 +189,40 @@ class TestDissipationMethods(unittest.TestCase):
         rho_trial = ureg.Quantity(np.logspace(start=np.log10(1e15), stop=np.log10(1e23), num=9), '1/m^3')
         (rho1, gamma1) = gamma_perpendicular_approx(rho_trial, self.sample2)
 
-        # make a copy since we are going to overwrite elements
-        sample2 = deepcopy(self.sample2)
-
         gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
-        err = np.zeros_like(rho1)       
+        err = np.zeros_like(rho1)
+        rho_original = self.sample2.rho       
         for index, rho_ in enumerate(rho1):
 
-            sample2.rho = rho_
-            gamma0[index] = gamma_perpendicular(theta2norm, sample2)
+            self.sample2.rho = rho_
+            gamma0[index] = gamma_perpendicular(theta2norm, self.sample2)
 
             y0 = gamma0[index].to('pN s/m').magnitude
             y1 = gamma1[index].to('pN s/m').magnitude
 
             err[index] = (y1 - y0)/y0
 
+        self.sample2.rho = rho_original
+        self.assertLess(np.abs(err).max(), 0.025)
+
+    def test_low_density_approx_perpendicular_JIT(self):
+        """Reproduce ``test_low_density_approx_perpendicular()`` using JIT versions of all the objects and functions."""
+
+        rho_trial = ureg.Quantity(np.logspace(start=np.log10(1e15), stop=np.log10(1e23), num=9), '1/m^3')
+        (rho1, gamma1) = gamma_perpendicular_approx(rho_trial, self.sample2)
+
+        gamma0 = ureg.Quantity(np.zeros_like(rho1), 'pN s/m')
+        err = np.zeros_like(rho1)
+        rho_original = self.sample2_jit.rho
+        for index, rho_ in enumerate(rho1):
+
+            self.sample2_jit.rho = rho_.to('1/m^3').magnitude
+            gamma0[index] = gamma_perpendicular_jit(theta2norm_jit, self.sample2_jit).to('pN s/m')
+
+            y0 = gamma0[index].to('pN s/m').magnitude
+            y1 = gamma1[index].to('pN s/m').magnitude
+
+            err[index] = (y1 - y0)/y0
+
+        self.sample2_jit.rho = rho_original
         self.assertLess(np.abs(err).max(), 0.025)

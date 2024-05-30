@@ -680,7 +680,7 @@ def gamma_perpendicular_jit(theta, sample):
         epsilon=sample.epsilon_d.real)
     
     t1 = c1 * c1 * C_jit(0 , theta, sample)
-    t2 = 2 * c0 * c1 * C_jit(1, theta, sample)
+    t2 = -2 * c0 * c1 * C_jit(1, theta, sample)
     t3 = c0 * c0 * C_jit(2, theta, sample)
 
     return prefactor * (t1 + t2 + t3)
