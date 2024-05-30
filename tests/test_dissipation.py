@@ -205,6 +205,7 @@ class TestDissipationMethods(unittest.TestCase):
         self.sample2.rho = rho_original
         self.assertLess(np.abs(err).max(), 0.025)
 
+
     def test_low_density_approx_perpendicular_JIT(self):
         """Reproduce ``test_low_density_approx_perpendicular()`` using JIT versions of all the objects and functions."""
 

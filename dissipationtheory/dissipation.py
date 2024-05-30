@@ -5,7 +5,7 @@ from dissipationtheory.capacitance import Csphere
 from dissipationtheory.capacitance import CsphereOverSemi
 from scipy import integrate
 from numba import jit
-from numba import float64, complex128
+from numba import float64, complex128, boolean
 from numba.experimental import jitclass
 from numba import deferred_type
 
@@ -221,7 +221,7 @@ def mycsch(x):
     
     return values
 
-def theta1norm(omega, sample, power):
+def theta1norm(omega, sample, power, part=np.imag):
 
     r1 = sample.Ld**2 / (sample.epsilon_s * sample.LD**2)
     r2 = sample.z_r**2 / (sample.epsilon_s * sample.LD**2)
@@ -252,11 +252,11 @@ def theta1norm(omega, sample, power):
     ratio = (1 - theta) / (1 + theta)
     exponent = (2 * sample.cantilever.d / sample.z_r).to('dimensionless').magnitude
 
-    integrand = omega**power * np.exp(-1 * omega * exponent) * np.imag(ratio)
+    integrand = omega**power * np.exp(-1 * omega * exponent) * part(ratio)
 
     return integrand
 
-def theta2norm(omega, sample, power):
+def theta2norm(omega, sample, power, part=np.imag):
 
     r1 = sample.Ld**2 / (sample.epsilon_s * sample.LD**2)
     r2 = sample.z_r**2 / (sample.epsilon_s * sample.LD**2)
@@ -274,16 +274,16 @@ def theta2norm(omega, sample, power):
     ratio = (1 - theta) / (1 + theta)
     exponent = (2 * sample.cantilever.d / sample.z_r).to('dimensionless').magnitude
 
-    integrand = omega**power * np.exp(-1 * omega * exponent) * np.imag(ratio) 
+    integrand = omega**power * np.exp(-1 * omega * exponent) * part(ratio) 
 
     return integrand
 
-def C(power, theta, sample):
+def C(power, theta, sample, part=np.imag):
     
     prefactor = (-1**(power + 1) * kb * ureg.Quantity(300., 'K')) / \
           (4 * np.pi * epsilon0 * sample.cantilever.omega_c * sample.z_r**(power+1))
     
-    integral = integrate.quad(theta, 0., np.inf, args=(sample, power))[0]
+    integral = integrate.quad(theta, 0., np.inf, args=(sample, power, part))[0]
     
     return (prefactor * integral).to_base_units()
 
@@ -297,7 +297,7 @@ def gamma_parallel(theta, sample):
             radius=sample.cantilever.R, 
             epsilon=sample.epsilon_d.real.magnitude)
 
-    return prefactor * 0.50 * c0 * c0 * C(2, theta, sample)
+    return prefactor * 0.50 * c0 * c0 * C(2, theta, sample, np.imag)
 
 def gamma_perpendicular(theta, sample):
     """Compute :math:`\\gamma_{\\perp}`."""
@@ -307,7 +307,9 @@ def gamma_perpendicular(theta, sample):
     c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_d.real.magnitude)        
     c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_d.real.magnitude)
     
-    return prefactor * (c1 * c1 * C(0 , theta, sample) - 2 * c0 * c1 * C(1, theta, sample) + c0 * c0 * C(2, theta, sample))
+    return prefactor * (c1 * c1 * C(0 , theta, sample, np.imag) 
+                        - 2 * c0 * c1 * C(1, theta, sample, np.imag) 
+                        + c0 * c0 * C(2, theta, sample, np.imag))
 
 def gamma_parallel_approx(rho, sample):
     """Low-density expansion for :math:`\\gamma_{\\parallel}`."""
@@ -583,8 +585,8 @@ def mycsch_jit(x):
 # a is complex by replacing a -> a * complex(1,0) when a is real.
 #
 
-@jit(float64(float64,SampleModel1Jit.class_type.instance_type,float64), nopython=True)
-def theta1norm_jit(omega, sample1, power):
+@jit(float64(float64,SampleModel1Jit.class_type.instance_type,float64,boolean), nopython=True)
+def theta1norm_jit(omega, sample1, power, isImag):
 
     r1 = sample1.Ld**2 / (sample1.epsilon_s * sample1.LD**2)
     r2 = sample1.z_r**2 / (sample1.epsilon_s * sample1.LD**2)
@@ -617,12 +619,15 @@ def theta1norm_jit(omega, sample1, power):
     ratio = (1 - theta) / (1 + theta)
     exponent = 2 * sample1.cantilever.d / sample1.z_r
 
-    integrand = omega**power * np.exp(-1 * omega * exponent) * np.imag(ratio)
+    if isImag:
+        integrand = omega**power * np.exp(-1 * omega * exponent) * np.imag(ratio)
+    else:
+        integrand = omega**power * np.exp(-1 * omega * exponent) * np.real(ratio)
 
     return integrand    
 
-@jit(float64(float64,SampleModel2Jit.class_type.instance_type,float64), nopython=True)
-def theta2norm_jit(omega, sample2, power):
+@jit(float64(float64,SampleModel2Jit.class_type.instance_type,float64,boolean), nopython=True)
+def theta2norm_jit(omega, sample2, power, isImag):
 
     r1 = sample2.Ld**2 / (sample2.epsilon_s * sample2.LD**2)
     r2 = sample2.z_r**2 / (sample2.epsilon_s * sample2.LD**2)
@@ -641,17 +646,23 @@ def theta2norm_jit(omega, sample2, power):
     ratio = (1 - theta) / (1 + theta)
     exponent = 2 * sample2.cantilever.d / sample2.z_r
 
-    integrand = omega**power * np.exp(-1 * omega * exponent) * np.imag(ratio) 
-    
+    if isImag:
+        integrand = omega**power * np.exp(-1 * omega * exponent) * np.imag(ratio) 
+    else:
+        integrand = omega**power * np.exp(-1 * omega * exponent) * np.real(ratio)
+
     return integrand
 
-def C_jit(power, theta, sample):
+def C_jit(power, theta, sample, isImag):
     
     prefactor = (-1**(power + 1) * kb * ureg.Quantity(300., 'K')) / \
           (4 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.omega_c,'1/s') * ureg.Quantity(sample.z_r,'m')**(power+1))
     
-    integral = integrate.quad(theta, 0., np.inf, args=(sample, power))[0]
-    
+    if isImag:
+        integral = integrate.quad(theta, 0., np.inf, args=(sample, power, True))[0]
+    else:
+        integral = integrate.quad(theta, 0., np.inf, args=(sample, power, False))[0]
+
     return (prefactor * integral).to_base_units()
 
 def gamma_parallel_jit(theta, sample):
@@ -663,7 +674,7 @@ def gamma_parallel_jit(theta, sample):
             radius=ureg.Quantity(sample.cantilever.R,'m'), 
             epsilon=sample.epsilon_d.real)
 
-    return prefactor * 0.50 * c0 * c0 * C_jit(2, theta, sample)
+    return prefactor * 0.50 * c0 * c0 * C_jit(2, theta, sample, True)
 
 def gamma_perpendicular_jit(theta, sample):
 
@@ -679,9 +690,9 @@ def gamma_perpendicular_jit(theta, sample):
         radius=ureg.Quantity(sample.cantilever.R,'m'),
         epsilon=sample.epsilon_d.real)
     
-    t1 = c1 * c1 * C_jit(0 , theta, sample)
-    t2 = -2 * c0 * c1 * C_jit(1, theta, sample)
-    t3 = c0 * c0 * C_jit(2, theta, sample)
+    t1 = c1 * c1 * C_jit(0 , theta, sample, True)
+    t2 = -2 * c0 * c1 * C_jit(1, theta, sample, True)
+    t3 = c0 * c0 * C_jit(2, theta, sample, True)
 
     return prefactor * (t1 + t2 + t3)
 
