@@ -5,6 +5,7 @@ from dissipationtheory.dissipation import theta1norm, theta2norm, gamma_parallel
 from dissipationtheory.dissipation import gamma_parallel_approx, gamma_perpendicular_approx
 from dissipationtheory.dissipation import CantileverModelJit, SampleModel1Jit, SampleModel2Jit
 from dissipationtheory.dissipation import theta1norm_jit, theta2norm_jit, gamma_parallel_jit, gamma_perpendicular_jit
+from dissipationtheory.dissipation import blds_perpendicular_approx, blds_perpendicular, blds_perpendicular_jit
 import pandas as pd
 import numpy as np
 import os
@@ -205,7 +206,6 @@ class TestDissipationMethods(unittest.TestCase):
         self.sample2.rho = rho_original
         self.assertLess(np.abs(err).max(), 0.025)
 
-
     def test_low_density_approx_perpendicular_JIT(self):
         """Reproduce ``test_low_density_approx_perpendicular()`` using JIT versions of all the objects and functions."""
 
@@ -227,3 +227,54 @@ class TestDissipationMethods(unittest.TestCase):
 
         self.sample2_jit.rho = rho_original
         self.assertLess(np.abs(err).max(), 0.025)
+
+    def test_blds_perpendicular_no_conductivity(self):
+        """Test the BLDS spectrum calculation against a zero-charge-density limiting case.  
+        To speed up the comparison, just check two frequency points, 0 Hz and 1 MHz.
+        """
+
+        omega_m = ureg.Quantity(np.array([1e0, 1e6]), 'Hz')
+        freq0 = np.ones_like(omega_m) * blds_perpendicular_approx(self.sample1)
+        freq1 = ureg.Quantity(np.zeros_like(omega_m), 'Hz')
+
+        mu_original = self.sample1.mu 
+        rho_original = self.sample1.rho
+
+        # set to almost zero, but not exactly zero, to avoid division-by-zero error
+        self.sample1.mu = ureg.Quantity(1e-21, 'm^2/(V s)') 
+        self.sample1.rho = ureg.Quantity(1e-21, '1/m^3')
+
+        for index, omega_ in enumerate(omega_m):
+
+            freq1[index] = blds_perpendicular(theta1norm, self.sample1, omega_).to('Hz')
+
+        self.sample1.mu = mu_original
+        self.sample1.rho = rho_original
+
+        err = (freq1 - freq0).to('Hz').magnitude
+        self.assertLess(np.abs(err).max(), 1e-6)
+
+    def test_blds_perpendicular_no_conductivity_jit(self):
+        """Reproduce ``test_blds_perpendicular_no_conductivity()`` using JIT versions of all the objects and functions."""
+
+        omega_m = ureg.Quantity(np.array([1e0, 1e6]), 'Hz')
+        freq0 = np.ones_like(omega_m) * blds_perpendicular_approx(self.sample1)
+        freq1 = ureg.Quantity(np.zeros_like(omega_m), 'Hz')
+
+        mu_original = self.sample1.mu 
+        rho_original = self.sample1.rho
+
+        # set to almost zero, but not exactly zero, to avoid division-by-zero error
+        self.sample1_jit.mu = 1e-21
+        self.sample1_jit.rho = 1e-21
+
+        for index, omega_ in enumerate(omega_m):
+
+            freq1[index] = blds_perpendicular_jit(theta1norm_jit, self.sample1_jit, omega_).to('Hz')
+
+        self.sample1.mu = mu_original
+        self.sample1.rho = rho_original
+
+        err = (freq1 - freq0).to('Hz').magnitude
+        self.assertLess(np.abs(err).max(), 1e-6)
+

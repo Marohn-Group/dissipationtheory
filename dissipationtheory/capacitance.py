@@ -39,7 +39,7 @@ def CsphereOverSemi(index, height, radius, epsilon, nterm=20):
     :param integer index: 0 for capacitance, 1 for 1st derivative, 2 for 2nd derivative
     :param pint.util.Quantity height: sphere-to-plane separation
     :param pint.util.Quantity radius: sphere radius
-    :param float: real part of the substrates dielectric constant
+    :param float epsilon: real part of the substrate's dielectric constant
     :param int nterm: number of terms in the expansion
 
     """
