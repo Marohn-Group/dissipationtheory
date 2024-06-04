@@ -6,6 +6,7 @@ from dissipationtheory.dissipation import gamma_parallel_approx, gamma_perpendic
 from dissipationtheory.dissipation import CantileverModelJit, SampleModel1Jit, SampleModel2Jit
 from dissipationtheory.dissipation import theta1norm_jit, theta2norm_jit, gamma_parallel_jit, gamma_perpendicular_jit
 from dissipationtheory.dissipation import blds_perpendicular_approx, blds_perpendicular, blds_perpendicular_jit
+from dissipationtheory.dissipation import lds_perpendicular, lds_perpendicular_jit
 import pandas as pd
 import numpy as np
 import os
@@ -277,4 +278,25 @@ class TestDissipationMethods(unittest.TestCase):
 
         err = (freq1 - freq0).to('Hz').magnitude
         self.assertLess(np.abs(err).max(), 1e-6)
+
+    def test_lds_perpendicular(self):
+        """Check that the real part of the LDS signal is half the BLDS signal."""
+
+        omega_m = ureg.Quantity(1, 'Hz')
+        freq0 = blds_perpendicular(theta1norm, self.sample1, omega_m)
+        (freq1, _) = lds_perpendicular(theta1norm, self.sample1, omega_m)
+
+        err = (freq1 - freq0/2).to('Hz').magnitude
+        self.assertLess(np.abs(err), 1e-6)
+
+    def test_lds_perpendicular_jit(self):
+        """Reproduce ``test_lds_perpendicular()`` using JIT versions of all the objects and functions."""
+
+        omega_m = ureg.Quantity(1, 'Hz')
+        freq0 = blds_perpendicular_jit(theta1norm_jit, self.sample1_jit, omega_m)
+        (freq1, _) = lds_perpendicular_jit(theta1norm_jit, self.sample1_jit, omega_m)
+
+        err = (freq1 - freq0/2).to('Hz').magnitude
+        self.assertLess(np.abs(err), 1e-6)
+
 

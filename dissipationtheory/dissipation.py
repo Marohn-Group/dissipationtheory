@@ -397,6 +397,36 @@ def blds_perpendicular(theta, sample, omega_m, k_c=ureg.Quantity(2.8,'N/m')):
 
     return answer
 
+def lds_perpendicular(theta, sample, omega_m, k_c=ureg.Quantity(2.8,'N/m')):
+    """Compute the in-phase and out-of-phase LDS signal.
+    Assume a default k = 2.8 N/m for the cantilever spring constant.
+    Much of the code below is adapted from ``blds_perpendicular()``.
+    """
+
+    preA = omega_m * sample.cantilever.omega_c * sample.cantilever.V_ts**2
+    preB = 4 * k_c * kb * ureg.Quantity(300., 'K')
+    prefactor = (preA / preB).to_base_units()
+
+    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_d.real.magnitude)        
+    c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_d.real.magnitude)
+    c2 = CsphereOverSemi(2, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_d.real.magnitude)
+
+    fc_original =  sample.cantilever.f_c
+    sample.cantilever.f_c = omega_m/(2 * np.pi) # can overwrite f_c; can't overwrite omega_c
+
+    X = prefactor * (2 * (c0 * c2 + c1 * c1) * C(0 , theta, sample, np.real) 
+                     - 8 * c0 * c1 * C(1, theta, sample, np.real) 
+                     + 4 * c0 * c0 * C(2, theta, sample, np.real))
+    
+    Y = -1 * prefactor * (2 * (c0 * c2 + c1 * c1) * C(0 , theta, sample, np.imag) 
+                          - 8 * c0 * c1 * C(1, theta, sample, np.imag) 
+                          + 4 * c0 * c0 * C(2, theta, sample, np.imag))
+
+    sample.cantilever.f_c = fc_original
+
+    return (X, Y)
+
+
 def blds_perpendicular_approx(sample, k_c=ureg.Quantity(2.8,'N/m')):
     """Compute the zero-charge-density limit of the BLDS signal. Use k = 2.8 N/m for now."""
 
@@ -739,7 +769,9 @@ def gamma_perpendicular_jit(theta, sample):
     return prefactor * (t1 + t2 + t3)
 
 def blds_perpendicular_jit(theta, sample, omega_m, k_c=ureg.Quantity(2.8,'N/m')):
-    """Compute BLDS signal using numba/JIT.  Use k = 2.8 N/m for now."""
+    """Compute BLDS signal using numba/JIT.
+    Assume a default cantilever spring constant of k = 2.8 N/m.
+    """
 
     preA = omega_m * ureg.Quantity(sample.cantilever.omega_c,'Hz') * ureg.Quantity(sample.cantilever.V_ts, 'V')**2
     preB = 2 * k_c * kb * ureg.Quantity(300., 'K')
@@ -770,6 +802,46 @@ def blds_perpendicular_jit(theta, sample, omega_m, k_c=ureg.Quantity(2.8,'N/m'))
     sample.cantilever.f_c = fc_original
 
     return answer
+
+def lds_perpendicular_jit(theta, sample, omega_m, k_c=ureg.Quantity(2.8,'N/m')):
+    """Compute BLDS signal using numba/JIT.
+    Assume a default cantilever spring constant of k = 2.8 N/m.
+    Much of the code below is adapted from ``blds_perpendicular_jit()``.
+    """
+
+    preA = omega_m * ureg.Quantity(sample.cantilever.omega_c,'Hz') * ureg.Quantity(sample.cantilever.V_ts, 'V')**2
+    preB = 4 * k_c * kb * ureg.Quantity(300., 'K')
+    prefactor = (preA / preB).to_base_units()
+
+    c0 = CsphereOverSemi(index=0, 
+        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
+        radius=ureg.Quantity(sample.cantilever.R,'m'),
+        epsilon=sample.epsilon_d.real)
+        
+    c1 = CsphereOverSemi(index=1, 
+        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
+        radius=ureg.Quantity(sample.cantilever.R,'m'),
+        epsilon=sample.epsilon_d.real)
+    
+    c2 = CsphereOverSemi(index=2, 
+        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
+        radius=ureg.Quantity(sample.cantilever.R,'m'),
+        epsilon=sample.epsilon_d.real)
+
+    fc_original =  sample.cantilever.f_c
+    sample.cantilever.f_c = omega_m.to('Hz').magnitude/(2 * np.pi) # can overwrite f_c; can't overwrite omega_c
+
+    X = prefactor * (2 * (c0 * c2 + c1 * c1) * C_jit(0 , theta, sample, False) 
+                     - 8 * c0 * c1 * C_jit(1, theta, sample, False) 
+                     + 4 * c0 * c0 * C_jit(2, theta, sample, False))
+
+    Y = -1 * prefactor * (2 * (c0 * c2 + c1 * c1) * C_jit(0 , theta, sample, True) 
+                          - 8 * c0 * c1 * C_jit(1, theta, sample, True) 
+                          + 4 * c0 * c0 * C_jit(2, theta, sample, True))
+
+    sample.cantilever.f_c = fc_original
+
+    return (X, Y)
 
 def gamma_perpendicular_fit(x, a, R, fc):
     """Compute the friction experienced by a cantilever oscillating in the perpendicular orientation 
