@@ -40,3 +40,4 @@ Functions to help compare numerically computed friction to Marohn-group data.
     :members:
     :undoc-members:
     :show-inheritance:
+    :special-members: __init__

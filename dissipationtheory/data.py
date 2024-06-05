@@ -1,13 +1,17 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from dissipationtheory.constants import ureg
+from dissipationtheory.constants import ureg, qe
 from lmfit import Model, Parameters
 from dissipationtheory.capacitance import C2SphereConefit
 from dissipationtheory.capacitance import FrictionCoefficientThickfit
+from dissipationtheory.dissipation import blds_perpendicular_jit
+from dissipationtheory.dissipation import theta1norm_jit
+import os
+import pandas as pd
 
 def pdf_to_dict_with_units(pdf):
-    """This utility function can be applied to a pandas dataframe object whose keys contain strings like 'distance [nm]' which contain data descriptor, distance, and a unit, nm.  This utility function turns the dataframe into a dictionary.  The dictionary key in the above example would be 'distance' and the dictionary values would be ureg.Quantity(np.array(<distance data>),'nm'), that is, a numpy array of data with units (implemented using the `pint` package)."""
+    """This utility function can be applied to a pandas dataframe (pdf) object whose keys contain strings like 'distance [nm]' which contain data descriptor, distance, and a unit, nm.  This utility function turns the dataframe into a dictionary.  The dictionary key in the above example would be 'distance' and the dictionary values would be ureg.Quantity(np.array(<distance data>),'nm'), that is, a numpy array of data with units (implemented using the `pint` package)."""
 
     datadict = {}
     for key in pdf.keys():
@@ -26,7 +30,7 @@ def pdf_to_dict_with_units(pdf):
     return datadict
 
 class DissipationData(object):
-    """An object for reading in and manipulating Marohn-group 'ringdown' data, stored as a csv file.  It is assumed that the `csv` file has the following data headings.
+    """An object for reading in and manipulating Marohn-group 'ringdown' data, stored as a ``csv`` file.  It is assumed that the ``csv`` file has the following data headings.
     
     * Distance from Surface [nm]
     * Curvature [Hz/V^2]
@@ -258,3 +262,269 @@ class DissipationData(object):
             fig.savefig(name + '.png', dpi=300)
         
         plt.tight_layout()
+
+class BLDSData(object):
+    """An object for reading in and manipulating Marohn-group BLDS spectroscopy data, stored as a ``tsv`` file.
+    It is assumed that the ``tsv`` file has the following data headings.
+
+    * Modulation Frequency [Hz]
+    * Mean Freq [Hz]
+    * X-Channel [Hz]
+    * Y-Channel [Hz]
+    """
+
+    def __init__(self, THIS, filepath, database, sample_jit):
+        """Initialize the data structure.
+
+        :param string THIS: the name of the current jupyter notebook (to be prepended to a figure filename)
+        :param list filepath: a list of strings describing the file path; see the example below 
+        :param dictionary database: a dictionary of dictionaries specifying the filenames and light intensities; see the example below
+        :param SampleModel1Jit sample_jit: 
+
+        Example filepath ::
+
+            ['~','Dropbox','EFM_Data_workup','pm6-y6-paper-blds-data','pm6-y6','ito','pm6-y6-ito-2']
+    
+        Example database ::
+
+            database = {}
+            database['A'] = {'filename': '230531-085452-BLDS-pm6-y6-3-dark.tsv', 'I [mW/cm^2]' : 0}
+            database['B'] = {'filename': '230531-085907-BLDS-pm6-y6-3-50mA.tsv', 'I [mW/cm^2]' : 0.84}
+        
+        Data from all the files are read into an internally-stored database at initialization time.  Example sample_jit ::
+
+
+            sample_jit = SampleModel1Jit(
+                cantilever = CantileverModelJit(
+                    f_c = 75e3, 
+                    V_ts = 1.0,
+                    R = 30e-9,
+                    d = 200e-9),
+                h_s = 110e-9, 
+                epsilon_s = complex(3.4, 0),
+                mu = 1e-8,
+                rho = 1e21,
+                epsilon_d = complex(1e6, 0),
+                z_r = 110e-9
+            )
+
+        During curve fitting, the tip-sample separation ``d``, charge mobility ``mu``, and charge density ``rho`` are varied.
+        """
+
+        self.THIS = THIS
+        self.database = database
+        self.sample_jit = sample_jit
+        self.findings = {}
+        self.plotkey = None
+        self.guess = False
+        self.fitted = False
+
+        for key in database.keys():
+    
+            path = os.path.join(os.path.join(*filepath), database[key]['filename'])
+            df = pd.read_csv(path, sep='\t')
+        
+            x = df['Modulation Frequency [Hz]'].to_numpy()
+            y1 = df['Mean Freq [Hz]'].to_numpy()
+            y2r = df['X-Channel [Hz]'].to_numpy()
+            y2i = df['Y-Channel [Hz]'].to_numpy()
+            y2m = np.sqrt(y2r**2 + y2i**2)
+        
+            self.database[key]['x'] = x
+            self.database[key]['abs(y1)'] = abs(y1)
+            self.database[key]['y2m'] = y2m
+
+    def plotdata(self, plotkey='abs(y1)'):
+        """Plot the BLDS spectra -- one plot per light intensity, arranged horizontally with a common y-axis.
+        This function returns the plot, for further customization or saving. 
+        If the data has been fit before, or if an initial guess was provided, the calculated BLDS spectrum will be plotted also.
+         
+        :param string plotkey: either 'abs(y1)' (default) or 'y2m'
+        """
+
+        self.plotkey = plotkey
+        fig, axes = plt.subplots(
+            figsize=(len(self.database) * 2.00 + 1.00, 2.50),
+            ncols=len(self.database),
+            sharey=True)
+
+        for index, key in enumerate(self.database.keys()):
+
+            x = self.database[key]['x']
+            y = self.database[key][plotkey]
+            
+            lbl = r'$I_{h \nu}$ = ' + '{:0.1f} mW/cm$^2$'.format(self.database[key]['I [mW/cm^2]'])
+            axes[index].set_title(lbl, fontsize=12)
+            axes[index].semilogx(x, y, marker = 'o', fillstyle='none', linestyle='none')
+            axes[index].set_xticks([1e3,1e5])
+            axes[index].set_xlabel('$\omega_{\mathrm{m}}$ [rad/s]')
+            axes[index].grid()
+            
+            if self.guess or self.fitted:
+                axes[index].semilogx(self.database[key]['x'], self.database[key]['y_calc'], '-')
+                
+        axes[0].set_ylabel('|$\Delta f_{\mathrm{BLDS}}$| [Hz]')
+        fig.tight_layout()
+        
+        return fig
+        
+    def fitfunc(self, x, separation, mobility, density):
+        """A function used internally to fit the BLDS spectrum to theory.
+        
+        :param np.array x: modulation-frequency data
+        :param float separation: tip-sample separation [nm]
+        :param float mobility: sample mobility [:math:`10^{-8} \\mathrmm{m}^2 \\mathrm{V}^{-1} \\mathrm{s}^{-1}`]
+        :param float density: sample charge density [:math:`10^{21} \\mathrm{m}^{-3}`]
+
+        The mobility and charge density are in units of :math:`10^{-8} \\mathrmm{m}^2 \\mathrm{V}^{-1} \\mathrm{s}^{-1}` and
+        :math:`10^{21} \\mathrm{m}^{-3}`, respectively.  This is so that the parameters passed to the curve-fitting
+        function are likely to be between about 0.001 and 1000. 
+        """
+
+        self.sample_jit.cantilever.d = separation * 1e-9
+        self.sample_jit.mu = mobility * 1e-8
+        self.sample_jit.rho = density * 1e21
+        
+        omega_m = ureg.Quantity(x, 'Hz')
+        blds = ureg.Quantity(np.zeros_like(x), 'Hz')
+        for index, omega_ in enumerate(omega_m):
+                blds[index] = blds_perpendicular_jit(theta1norm_jit, self.sample_jit, omega_).to('Hz')
+        
+        return abs(blds.to('Hz').magnitude)
+
+    def fitguess(self, separation, mobility, density):
+        """Create an initial guess for curve fitting.
+        The same initial guess is used at each light intensity.
+        
+        :param float separation: tip-sample separation [nm]
+        :param float mobility: sample mobility [:math:`10^{-8} \\mathrmm{m}^2 \\mathrm{V}^{-1} \\mathrm{s}^{-1}`]
+        :param float density: sample charge density [:math:`10^{21} \\mathrm{m}^{-3}`]
+        """
+
+        self.guess = True
+        self.separation = separation
+        self.mobility = mobility
+        self.mobility = density
+
+        for key in self.database.keys():
+            self.database[key]['y_calc'] = self.fitfunc(self.database[key]['x'], separation, mobility, density)
+
+    def fit(self):
+        """For each BLDS spectrum, find an optimimum tip-sample separation, mobility, and charge density."""
+
+        # Set up the fit
+        
+        self.fitted=True
+        gmodel = Model(self.fitfunc)
+
+        pars= Parameters() 
+        pars.add('separation', value=self.separation, min=50, max=500)
+        pars.add('mobility', value=self.mobility, min=0.01, max=100)
+        pars.add('density', value=self.mobility, min=0.01, max=100)
+
+        # Loop over all keys and fit the blds data
+        
+        for key in self.database.keys():
+
+            print('fitting dataset {:}'.format(key))
+
+            result = gmodel.fit(
+                self.database[key][self.plotkey],
+                x=self.database[key]['x'],
+                params=pars)
+            
+            self.database[key]['result'] = result
+            self.database[key]['y_calc'] = result.best_fit
+            self.database[key]['values'] = {
+                'separation': ureg.Quantity(result.params['separation'].value, 'nm'),
+                'mobility': ureg.Quantity(1e-8 * result.params['mobility'].value, 'm^2/(V s)'),
+                'density': ureg.Quantity(1e21 * result.params['density'].value, '1/m^3')}            
+            self.database[key]['stderr'] = {
+                'separation': ureg.Quantity(result.params['separation'].stderr, 'nm'),
+                'mobility': ureg.Quantity(1e-8 * result.params['mobility'].stderr, 'm^2/(V s)'),
+                'density': ureg.Quantity(1e21 * result.params['density'].stderr, '1/m^3')}
+       
+        # Create conductivity dictionary containing intensities and conductivity (values and error bars) 
+        # with units. Compute a conductivity error bar by propagating error
+        
+        I_val = ureg.Quantity(np.zeros(len(self.database)), 'mW/cm^2')
+        cond_val = ureg.Quantity(np.zeros(len(self.database)), 'mS/m')
+        cond_err = ureg.Quantity(np.zeros(len(self.database)), 'mS/m')
+        
+        for index, key in enumerate(self.database.keys()):
+        
+            I_val[index] =  ureg.Quantity(self.database[key]['I [mW/cm^2]'], 'mW/cm^2')
+            
+            mu_val = self.database[key]['values']['mobility']
+            rho_val = self.database[key]['values']['density']
+            
+            cond_val[index] = qe * mu_val * rho_val
+        
+            mu_err = self.database[key]['stderr']['mobility']
+            rho_err = self.database[key]['stderr']['density']
+            
+            cond_err[index] = cond_val[index] * np.sqrt((mu_err/mu_val)**2 + (rho_err/rho_val)**2)
+
+        self.findings['conductivity'] = {'x': I_val, 'y': cond_val, 'yerr': cond_err}
+
+       # Create a dictionary of separation, mobility, and density.
+       # There is some rearranging to do, from a list of items with units, 
+       # to a numpy array with one unit for the whole array.
+  
+        for finding in ['separation', 'mobility', 'density']:
+            unit = self.database[key]['values'][finding].units
+            y = np.array([self.database[key]['values'][finding].to(unit).magnitude for key in self.database.keys()])
+            yerr = np.array([self.database[key]['stderr'][finding].to(unit).magnitude for key in self.database.keys()])
+            
+            self.findings[finding] = {
+                'x': I_val,
+                'y': ureg.Quantity(y, unit),
+                'yerr': ureg.Quantity(yerr, unit)
+            }
+
+    def plotfindings(self):
+        """Plot the fit results: calculated conductivity and best-fit separation, mobility, and charge denstiy versus light intensity."""
+
+        fig, axes = plt.subplots(figsize=(10.0, 2.50), ncols=4)
+        opts = dict(marker='o', mfc='w', ms=4, capsize=3, linestyle='none')
+        
+        for index, finding in enumerate(self.findings.keys()):
+        
+            if finding == 'conductivity':
+                ylabel=r'$\sigma$ [$\mu$S/m]'
+                yunit='uS/m'
+                ydiv=1
+            elif finding == 'separation':
+                ylabel=r'$d$ [nm]'
+                yunit='nm'
+                ydiv=1
+            elif finding == 'mobility':
+                ylabel=r'$\mu$ [$10^{-5}$ cm$^2$/(V s)]'
+                yunit='cm^2/(V s)'
+                ydiv=1e-5
+            elif finding == 'density':
+                ylabel=r'$\rho$ [$10^{16}$ cm$^{-3}$]'
+                yunit='1/cm^3'
+                ydiv=1e16
+                
+            axes[index].errorbar(
+                self.findings[finding]['x'].to('mW/cm^2').magnitude, 
+                self.findings[finding]['y'].to(yunit).magnitude/ydiv,
+                yerr=self.findings[finding]['yerr'].to(yunit).magnitude /ydiv,
+                **opts)
+        
+            # axes[index].set_xscale('log')
+            axes[index].set_ylabel(ylabel)
+            axes[index].set_xlabel(r'$I_{h \nu}$ [mW/cm$^2$]')
+            axes[index].grid()
+        
+        fig.tight_layout()
+        
+        return fig
+
+    def printfindings(self):
+        """Print out useful results, like the dark conductivity."""
+
+        print("dark conductivity = {:5.1f} +/- {:5.1f} uS/m".format(
+            self.findings['conductivity']['y'][0].to('uS/m').magnitude,
+            self.findings['conductivity']['yerr'][0].to('uS/m').magnitude))
