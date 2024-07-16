@@ -5,7 +5,7 @@ from dissipationtheory.data import BLDSData
 from dissipationtheory.constants import ureg
 from dissipationtheory.dissipation import blds_perpendicular_jit
 from dissipationtheory.dissipation2 import theta1norm_jit
-from lmfit import Model, Parameters
+from lmfit import Model, Parameters d
 
 class BLDSData2(BLDSData):
 
