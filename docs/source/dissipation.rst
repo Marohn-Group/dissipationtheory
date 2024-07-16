@@ -30,11 +30,32 @@ The main show.
     :members:
     :undoc-members:
     :show-inheritance:
+    
+``dissipation2.py``
+------------------
+
+The same functions as in ``dissipation.py``, but with conductivity and charge density as the dependent variables, instead of mobility and charge density.  The classes ``SampleModel1``, ``SampleModel2``, ``SampleModel1Jit``, and ``SampleModel2Jit`` have been tweaked; the other functions remain the same.
+
+.. automodule:: dissipation
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 ``data.py``
 -----------
 
-Functions to help compare numerically computed friction to Marohn-group data.
+Functions to help compare numerically computed friction and BLDS spectra to Marohn-group data. When fitting BLDS data, the free variables are charge density and charge mobility.
+
+.. automodule:: data
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :special-members: __init__
+    
+``data2.py``
+------------
+
+Functions to help compare numerically computed BLDS spectra to Marohn-group data. When fitting BLDS data, the free variables are charge mobility and charge density.
 
 .. automodule:: data
     :members:

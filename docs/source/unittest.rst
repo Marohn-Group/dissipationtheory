@@ -30,3 +30,13 @@ Test the numerical calculations of non-contact friction in the ``dissipation.py`
     :members:
     :undoc-members:
     :show-inheritance:
+    
+``test_dissipation2``
+---------------------
+
+Test the numerical calculations of non-contact friction in the ``dissipation2.py`` package analogously.
+
+.. automodule:: test_dissipation
+    :members:
+    :undoc-members:
+    :show-inheritance:
