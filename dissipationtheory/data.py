@@ -271,6 +271,8 @@ class BLDSData(object):
     * Mean Freq [Hz]
     * X-Channel [Hz]
     * Y-Channel [Hz]
+
+    For each BLDS spectrum, find a best-fit tip-sample separation, mobility, and charge density.
     """
 
     def __init__(self, THIS, filepath, database, sample_jit):
@@ -410,7 +412,7 @@ class BLDSData(object):
             self.database[key]['y_calc'] = self.fitfunc(self.database[key]['x'], separation, mobility, density)
 
     def fit(self):
-        """For each BLDS spectrum, find an optimimum tip-sample separation, mobility, and charge density."""
+        """For each BLDS spectrum, find an optimum tip-sample separation, mobility, and charge density."""
 
         # Set up the fit
         
