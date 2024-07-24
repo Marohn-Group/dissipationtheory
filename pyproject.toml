@@ -30,6 +30,7 @@ tqdm = "^4.66"
 numba = "^0.58"
 sphinx = "^7.3.7"
 sphinx-rtd-theme = "^2.0.0"
+h5py = "3.11.0"
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "tox", "tox-conda"]
