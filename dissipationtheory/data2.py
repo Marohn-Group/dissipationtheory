@@ -6,6 +6,7 @@ from dissipationtheory.constants import ureg
 from dissipationtheory.dissipation import blds_perpendicular_jit
 from dissipationtheory.dissipation2 import theta1norm_jit
 from lmfit import Model, Parameters
+import h5py
 
 class BLDSData2(BLDSData):
     """An object for reading in and manipulating Marohn-group BLDS spectroscopy data, stored as a ``tsv`` file.
