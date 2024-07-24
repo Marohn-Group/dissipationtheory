@@ -264,7 +264,7 @@ class BLDSdataRT(object):
     def _freq_vs_time_lock_in(self, target):
         """The complex Fourier component nearest the target frequency."""
 
-        idx = np.abs(B.F - target).argmin() 
+        idx = np.abs(self.F - target).argmin() 
         return (self.F[idx], self.dS_FT[idx])
 
     def spectra(self):
