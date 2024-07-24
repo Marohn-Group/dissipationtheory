@@ -280,7 +280,7 @@ class BLDSdataRT(object):
         # Next, loop over the datasets
 
         self.favg = np.zeros_like(self.omega_m)
-        self.BLDS = np.zeros_like(self.omega_m)
+        self.BLDS = np.zeros_like(self.omega_m, dtype=complex)
 
         for index, key in enumerate(self.keys):
             
