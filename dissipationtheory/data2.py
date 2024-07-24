@@ -7,6 +7,7 @@ from dissipationtheory.dissipation import blds_perpendicular_jit
 from dissipationtheory.dissipation2 import theta1norm_jit
 from lmfit import Model, Parameters
 import h5py
+from freqdemod.demodulate import Signal
 
 class BLDSData2(BLDSData):
     """An object for reading in and manipulating Marohn-group BLDS spectroscopy data, stored as a ``tsv`` file.
@@ -233,7 +234,7 @@ class BLDSdataRT(object):
         signal_adc = np.array(self.f['data'][key])
         signal_nm = self._convert(signal_adc)
 
-        # Use the freqdemod package to 
+        # Use the freqdemod package
         
         self.s = Signal()
         self.s.load_nparray(signal_nm, "x", "nm", self.dt)
@@ -283,8 +284,8 @@ class BLDSdataRT(object):
 
         for index, key in enumerate(self.keys):
             
-            B._extract_freq_vs_time(key)
+            self._extract_freq_vs_time(key)
             self.favg[index] = self.S.mean() - self.fc
             
-            B._FT_freq_vs_time()
-            _, self.BLDS[index] = B._freq_vs_time_lock_in(self.am)
+            self._FT_freq_vs_time()
+            _, self.BLDS[index] = self._freq_vs_time_lock_in(self.am)

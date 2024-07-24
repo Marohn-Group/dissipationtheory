@@ -24,13 +24,14 @@ pytest = { version = ">=7.2.0", optional = true }
 pytest-cov = { version = ">=3.0.0", optional = true }
 tox = { version = ">=3.24.5", optional = true }
 tox-conda = { version = ">=0.9.2", optional = true}
-pint = "^0.20.1"
+pint = ">=0.21"
 jupyter = "^1.0.0"
 tqdm = "^4.66"
 numba = "^0.58"
 sphinx = "^7.3.7"
 sphinx-rtd-theme = "^2.0.0"
-h5py = "3.11.0"
+h5py = "^3.11.0"
+freqdemod = {git = "https://github.com/JohnMarohn/FreqDemod.git"}
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "tox", "tox-conda"]
