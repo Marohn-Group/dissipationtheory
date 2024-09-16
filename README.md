@@ -142,3 +142,11 @@ $ conda create -n dissipationtheory python=3.8
 $ pip install .[test]
 $ python -m pytest
 ```
+
+## 
+
+The lines of code in the repository can be viewed by running
+
+```
+git ls-files *.py | xargs wc -l
+```
