@@ -54,6 +54,31 @@ class CantileverModel(object):
         
         return str
     
+    def args(self):
+        """A dictionary with the cantilever parameters, useful for initializing 
+        a jit version of the cantilever object:
+        
+            cantilever = CantileverModel(
+                f_c = ureg.Quantity(75, 'kHz'),
+                k_c = ureg.Quantity(2.8, 'N/m'), 
+                V_ts = ureg.Quantity(1, 'V'), 
+                R = ureg.Quantity(35, 'nm'), 
+                d = ureg.Quantity(38, 'nm')
+            )
+            cantilever_jit = CantileverModelJit(**cantilever.args())
+
+        """
+
+        args = {
+            'f_c': self.f_c.to('Hz').magnitude, 
+            'k_c': self.k_c.to('N/m').magnitude, 
+            'V_ts': self.V_ts.to('V').magnitude, 
+            'R': self.R.to('m').magnitude,
+            'd': self.d.to('m').magnitude
+        }
+
+        return args
+    
 class SampleModel1(object):
     """Model I sample object defined in Lekkala2013nov, Fig. 1(b)::
     
@@ -116,7 +141,7 @@ class SampleModel1(object):
         str = str + '\nsemiconductor\n\n'
         str = str + '             epsilon (real) = {:0.3f}\n'.format(self.epsilon_s.to('').real.magnitude)
         str = str + '             epsilon (imag) = {:0.3f}\n'.format(self.epsilon_s.to('').imag.magnitude)
-        str = str + '                  thickness = {:.1f} nm\n'.format(self.h_s.to('nm').magnitude)
+        str = str + '                  thickness = {:0.1f} nm\n'.format(self.h_s.to('nm').magnitude)
         str = str + '               conductivity = {:0.3e} S/m\n'.format(self.sigma.to('S/m').magnitude)
         str = str + '             charge density = {:0.3e} m^{{-3}}\n'.format(self.rho.to('1/m^3').magnitude)
         str = str + '           reference height = {:0.3e} nm\n'.format(self.z_r.to('nm').magnitude)
@@ -134,6 +159,46 @@ class SampleModel1(object):
         str = str + '       thickness = infinite'
         
         return str
+
+    def args(self):
+        """A dictionary with the sample parameters, useful for initializing 
+        a jit version of the sample object:
+        
+            cantilever = CantileverModel(
+                f_c = ureg.Quantity(75, 'kHz'),
+                k_c = ureg.Quantity(2.8, 'N/m'), 
+                V_ts = ureg.Quantity(1, 'V'), 
+                R = ureg.Quantity(35, 'nm'), 
+                d = ureg.Quantity(38, 'nm')
+            )
+
+            sample = SampleModel1(
+                cantilever = cantilever,
+                h_s = ureg.Quantity(500, 'nm'),
+                epsilon_s = ureg.Quantity(complex(20, -0.2), ''),
+                sigma = ureg.Quantity(1E-5, 'S/m'),
+                rho = ureg.Quantity(1e21, '1/m^3'),
+                epsilon_d = ureg.Quantity(complex(1e6, 0), ''),
+                z_r = ureg.Quantity(300, 'nm')
+            )
+
+            sample_jit = SampleModel1Jit(**sample.args())
+
+        """
+
+        cantilever_jit = CantileverModelJit(**self.cantilever.args())
+
+        args = {
+            'cantilever': cantilever_jit,
+            'h_s': self.h_s.to('m').magnitude,
+            'epsilon_s': self.epsilon_s.to('').magnitude,
+            'sigma': self.sigma.to('S/m').magnitude,
+            'rho': self.rho.to('1/m^3').magnitude,
+            'epsilon_d': self.epsilon_d.to('').magnitude,
+            'z_r': self.z_r.to('m').magnitude
+        }
+
+        return args
 
 class SampleModel2(object):
     """Model II sample object defined in Lekkala2013nov, Fig. 1(b)::
@@ -197,7 +262,7 @@ class SampleModel2(object):
         str = str + '\ndielectric\n\n'
         str = str + '  epsilon (real) = {:0.3f}\n'.format(self.epsilon_d.to('').real.magnitude)
         str = str + '  epsilon (imag) = {:0.3f}\n'.format(self.epsilon_d.to('').imag.magnitude)
-        str = str + '       thickness = {:.1f} nm\n\n'.format(self.h_d.to('nm').magnitude)
+        str = str + '       thickness = {:0.1f} nm\n\n'.format(self.h_d.to('nm').magnitude)
         str = str + 'semiconductor\n\n'
         str = str + '             epsilon (real) = {:0.3f}\n'.format(self.epsilon_s.to('').real.magnitude)
         str = str + '             epsilon (imag) = {:0.3f}\n'.format(self.epsilon_s.to('').imag.magnitude)
@@ -215,7 +280,47 @@ class SampleModel2(object):
         str = str + '   effective epsilon (imag) = {:0.3f}\n\n'.format(self.epsilon_eff.to('').imag.magnitude)
 
         return str
-    
+
+    def args(self):
+        """A dictionary with the sample parameters, useful for initializing 
+        a jit version of the sample object:
+        
+            cantilever = CantileverModel(
+                f_c = ureg.Quantity(75, 'kHz'),
+                k_c = ureg.Quantity(2.8, 'N/m'), 
+                V_ts = ureg.Quantity(1, 'V'), 
+                R = ureg.Quantity(35, 'nm'), 
+                d = ureg.Quantity(38, 'nm')
+            )
+
+            sample2 = SampleModel2(
+                cantilever = cantilever,
+                epsilon_d = ureg.Quantity(complex(20, -0.2), ''),
+                h_d = ureg.Quantity(1, 'nm'),
+                epsilon_s = ureg.Quantity(complex(20, -0.2), ''),
+                sigma = ureg.Quantity(1E-5, 'S/m'),
+                rho = ureg.Quantity(1e21, '1/m^3'),
+                z_r = ureg.Quantity(300, 'nm')
+            )            
+
+            sample_jit = SampleModel2Jit(**sample.args())
+
+        """
+
+        cantilever_jit = CantileverModelJit(**self.cantilever.args())
+
+        args = {
+            'cantilever': cantilever_jit,
+            'epsilon_d': self.epsilon_d.to('').magnitude,
+            'h_d': self.h_d.to('m').magnitude,
+            'epsilon_s': self.epsilon_s.to('').magnitude,
+            'sigma': self.sigma.to('S/m').magnitude,
+            'rho': self.rho.to('1/m^3').magnitude,
+            'z_r': self.z_r.to('m').magnitude
+        }
+
+        return args
+
 def mysech(x):
     """Define my own ``sech()`` function to avoid overflow problems."""
 
@@ -407,9 +512,410 @@ def BLDSapprox(sample, x):
     
     er = sample.epsilon_s.real.magnitude
     a = 0.25 * (er - 1)/(er + 1)
-    b = 0.50 * er / (er + 1)**2
+    b = 0.50 / (er + 1)**2
 
     BLDS_approx = pre * (a + b * x)
     mask = BLDS_approx.to('Hz').magnitude <= BLDS_high.to('Hz').magnitude
     
     return [x[mask], BLDS_approx[mask]]
+
+CantileverModelSpec = [
+    ('f_c',float64),
+    ('k_c',float64),
+    ('V_ts',float64),
+    ('R',float64),
+    ('d',float64)] 
+
+@jitclass(CantileverModelSpec)
+class CantileverModelJit(object):
+
+    def __init__(self, f_c, k_c, V_ts, R, d):
+
+        self.f_c = f_c
+        self.k_c = k_c
+        self.V_ts = V_ts
+        self.R = R
+        self.d = d
+
+    @property
+    def omega_c(self):
+        return 2 * np.pi * self.f_c
+
+    def print(self):  # <=== can't use the __repr__ function :-(
+
+        print("   cantilever freq = ", self.f_c, "Hz") # <== can't use formatting strings here
+        print("                   = ", self.omega_c, "rad/s")
+        print("   spring constant = ", self.k_c, "N/m")
+        print("tip-sample voltage = ", self.V_ts, "V")
+        print("            radius = ", self.R, "m")
+        print("            height = ", self.d, "m")
+
+CantileverModelJit_type = deferred_type()
+CantileverModelJit_type.define(CantileverModelJit.class_type.instance_type)
+
+kb_= kb.to('J/K').magnitude
+T_ = 300.
+qe_ = qe.to('C').magnitude
+epsilon0_ = epsilon0.to('C/(V m)').magnitude
+
+SampleModel1Spec = [
+    ('cantilever', CantileverModelJit_type),
+    ('epsilon_s',complex128),
+    ('h_s', float64),
+    ('sigma',float64),
+    ('rho',float64),
+    ('epsilon_d',complex128),
+    ('z_r',float64)]
+
+@jitclass(SampleModel1Spec)
+class SampleModel1Jit(object):
+    
+    def __init__(self, cantilever, epsilon_s, h_s, sigma, rho, epsilon_d, z_r):
+
+        self.cantilever = cantilever
+        self.epsilon_s = epsilon_s
+        self.h_s = h_s
+        self.sigma = sigma
+        self.rho = rho
+        self.epsilon_d = epsilon_d
+        self.z_r = z_r
+
+    @property
+    def omega0(self):
+        return self.sigma / epsilon0_
+
+    @property
+    def mu(self):
+        return self.sigma / (qe_ * self.rho)
+    
+    @property
+    def D(self):
+        return (kb_ * T_ * self.mu) / qe_
+
+    @property
+    def Ld(self):
+        return np.sqrt(self.D / self.cantilever.omega_c)
+    
+    @property
+    def LD(self):
+        return np.sqrt((epsilon0_ * kb_ * T_)/(self.rho * qe_ * qe_))
+
+    @property
+    def epsilon_eff(self):
+        return self.epsilon_s - complex(0,1) * self.Ld**2 / self.LD**2
+    
+    def print(self):
+
+        print("cantilever")
+        print("==========")
+        self.cantilever.print()
+        print("")
+        print("semiconductor")
+        print("=============")
+        print("          epsilon (real) = ", self.epsilon_s.real)
+        print("          epsilon (imag) = ", self.epsilon_s.imag)
+        print("               thickness = ", self.h_s, "m")
+        print("            conductivity = ", self.sigma, "S/m")
+        print("          charge density = ", self.rho, "m^{{-3}}")
+        print("        reference height = ", self.z_r, "m")
+        print(" ")
+        print("      roll-off frequency = ", self.omega0, "Hz")        
+        print("                mobility = ", self.mu, "m^2/(V s)")
+        print("      diffusion constant = ", self.D, "m^2/s")
+        print("            Debye length = ", self.LD, "m")
+        print("        diffusion length = ", self.Ld, "m")
+        print("effective epsilon (real) = ", self.epsilon_eff.real)
+        print("effective epsilon (imag) = ", self.epsilon_eff.imag)
+        print("")
+        print("dielectric")
+        print("==========")
+        print(" epsilon (real) = ", self.epsilon_d.real)
+        print(" epsilon (imag) = ", self.epsilon_d.imag)
+        print("      thickness = infinite")
+
+SampleModel2Spec = [
+    ('cantilever', CantileverModelJit_type),
+    ('epsilon_d',complex128),
+    ('h_d', float64),
+    ('epsilon_s',complex128),
+    ('sigma',float64),
+    ('rho',float64),
+    ('z_r',float64)]
+
+@jitclass(SampleModel2Spec)
+class SampleModel2Jit(object):
+    
+    def __init__(self, cantilever, epsilon_d, h_d, epsilon_s, sigma, rho, z_r):
+
+        self.cantilever = cantilever
+        self.epsilon_d = epsilon_d
+        self.h_d = h_d
+        self.epsilon_s = epsilon_s
+        self.sigma = sigma
+        self.rho = rho
+        self.z_r = z_r
+
+    @property
+    def omega0(self):
+        return self.sigma / epsilon0_
+
+    @property
+    def mu(self):
+        return self.sigma / (qe_ * self.rho)
+
+    @property
+    def D(self):
+        return (kb_ * T_ * self.mu) / qe_
+
+    @property
+    def Ld(self):
+        return np.sqrt(self.D / self.cantilever.omega_c)
+    
+    @property
+    def LD(self):
+        return np.sqrt((epsilon0_ * kb_ * T_)/(self.rho * qe_ * qe_))
+
+    @property
+    def epsilon_eff(self):
+        return self.epsilon_s - complex(0,1) * self.Ld**2 / self.LD**2
+
+    def print(self):
+
+        print("cantilever")
+        print("==========")
+        self.cantilever.print()
+        print("")
+        print("dielectric")
+        print("==========")
+        print(" epsilon (real) = ", self.epsilon_d.real)
+        print(" epsilon (imag) = ", self.epsilon_d.imag)
+        print("      thickness = ", self.h_d, "m")
+        print("")
+        print("semiconductor")
+        print("=============")
+        print("          epsilon (real) = ", self.epsilon_s.real)
+        print("          epsilon (imag) = ", self.epsilon_s.imag)
+        print("               thickness = infinite")
+        print("            conductivity = ", self.sigma, "S/m")        
+        print("                mobility = ", self.mu, "m^2/(V s)")
+        print("        reference height = ", self.z_r, "m")
+        print(" ")
+        print("      roll-off frequency = ", self.omega0, "Hz")
+        print("      diffusion constant = ", self.D, "m^2/s")
+        print("          charge density = ", self.rho, "m^{{-3}}")
+        print("            Debye length = ", self.LD, "m")
+        print("        diffusion length = ", self.Ld, "m")
+        print("effective epsilon (real) = ", self.epsilon_eff.real)
+        print("effective epsilon (imag) = ", self.epsilon_eff.imag)
+
+# To compile the theta1norm_jit() and theta2norm_jit() functions, jit needs an actual 
+#    instance of the function input "sample". 
+
+sample1 = SampleModel1Jit(
+    cantilever=CantileverModelJit(81.0e3, 2.8, 1.,  80E-9, 300E-9),
+    epsilon_s=complex(11.9,-0.05),
+    h_s=3000E-9,
+    sigma = 1e-8,
+    rho=1e21,
+    epsilon_d=complex(11.9,-0.05),
+    z_r=300E-9)
+
+sample2 = SampleModel2Jit(
+    cantilever=CantileverModelJit(81.0e3, 2.8, 1.,  80E-9, 300E-9),
+    epsilon_d=complex(11.9,-0.05),
+    h_d=0.,
+    epsilon_s=complex(11.9,-0.05),
+    sigma = 1e-8,
+    rho=1e21,
+    z_r=300E-9)
+
+@jit(complex128(complex128), nopython=True)
+def mysech_jit(x):
+    """Define my own just-in-time-compiled ``sech()`` function to avoid overflow problems."""
+    if x.real < 710.4:
+        return 1/np.cosh(x)
+    else:
+        return complex(0., 0.)
+
+@jit(complex128(complex128), nopython=True)
+def mycsch_jit(x):
+    """Define my own just-in-time-compiled ``csch()`` function to avoid overflow problems."""
+    if x.real < 710.4:
+        return 1/np.sinh(x)
+    else:
+        return complex(0., 0.,)
+
+# https://github.com/numba/numba/issues/2922
+# Inaccurate complex tanh implementation #2922
+# "Numba complex tanh implementation returns nans for large real values, 
+# probably due to some intermediate under/overflow."
+#
+# Replace np.tanh(a) with cmath.tanh(a), but take care to make the argument
+# a is complex by replacing a -> a * complex(1,0) when a is real.
+#
+
+@jit(float64(float64,SampleModel1Jit.class_type.instance_type,float64,float64,boolean), nopython=True)
+def theta1norm_jit(psi, sample1, omega, power, isImag):
+
+    # Recompute Ld and epsilon_eff appropriate for the new frequency omega
+
+    Ld = np.sqrt(sample1.D / omega)
+    epsilon_eff = sample1.epsilon_s - complex(0,1) * Ld**2 / sample1.LD**2
+
+    r1 = Ld**2 / (sample1.epsilon_s * sample1.LD**2)
+    r2 = sample1.z_r**2 / (sample1.epsilon_s * sample1.LD**2)
+    r3 = sample1.z_r**2 / Ld**2
+
+    lambduh = complex(0,1) * r1 * psi / np.sqrt(psi**2 + r2 + complex(0,1) * r3)
+ 
+    khs = complex(1,0) * psi * sample1.h_s / sample1.z_r
+
+    r1 = sample1.h_s**2 / sample1.z_r**2
+    r2 = sample1.h_s**2 / (sample1.epsilon_s * sample1.LD**2)
+    r3 = sample1.h_s**2 / Ld**2
+
+    etahs = complex(1,0) * np.sqrt(r1 * psi**2 + r2 + complex(0,1) * r3)
+
+    alpha = epsilon_eff/sample1.epsilon_d
+ 
+    r1 = 1/epsilon_eff
+    t1 = - lambduh / cmath.tanh(etahs)
+    t2 = cmath.tanh(khs) * cmath.tanh(etahs) \
+         + alpha * cmath.tanh(etahs) \
+         - lambduh \
+         + 2 * lambduh * mysech_jit(khs) * mysech_jit(etahs) \
+         - lambduh**2 * cmath.tanh(khs) * mysech_jit(etahs) * mycsch_jit(etahs)
+    t3 = cmath.tanh(etahs) \
+         + cmath.tanh(khs) * (-1 * lambduh + alpha * cmath.tanh(etahs))
+
+    theta = r1 * (t1 + t2 / t3)
+
+    ratio = (1 - theta) / (1 + theta)
+    exponent = 2 * sample1.cantilever.d / sample1.z_r
+
+    if isImag:
+        integrand = psi**power * np.exp(-1 * psi * exponent) * np.imag(ratio)
+    else:
+        integrand = psi**power * np.exp(-1 * psi * exponent) * np.real(ratio)
+
+    return integrand    
+
+@jit(float64(float64,SampleModel2Jit.class_type.instance_type,float64,float64,boolean), nopython=True)
+def theta2norm_jit(psi, sample2, omega, power, isImag):
+
+    # Recompute Ld and epsilon_eff appropriate for the new frequency omega
+
+    Ld = np.sqrt(sample2.D / omega)
+    epsilon_eff = sample2.epsilon_s - complex(0,1) * Ld**2 / sample2.LD**2
+
+    r1 = Ld**2 / (sample2.epsilon_s * sample2.LD**2)
+    r2 = sample2.z_r**2 / (sample2.epsilon_s * sample2.LD**2)
+    r3 = sample2.z_r**2 / Ld**2
+
+    lambduh = complex(0,1) * r1 * psi / np.sqrt(psi**2 + r2 + complex(0,1) * r3)
+     
+    khd = complex(1,0) * psi * sample2.h_d / sample2.z_r
+
+    r1 = 1/sample2.epsilon_d
+    t1 = epsilon_eff * cmath.tanh(khd) + (1 - lambduh) * sample2.epsilon_d
+    t2 = epsilon_eff + (1 - lambduh) * sample2.epsilon_d * cmath.tanh(khd)
+
+    theta = (r1 * t1) / t2
+
+    ratio = (1 - theta) / (1 + theta)
+    exponent = 2 * sample2.cantilever.d / sample2.z_r
+
+    if isImag:
+        integrand = psi**power * np.exp(-1 * psi * exponent) * np.imag(ratio) 
+    else:
+        integrand = psi**power * np.exp(-1 * psi * exponent) * np.real(ratio)
+
+    return integrand
+
+def K_jit(power, theta, sample, omega, isImag):
+    """Compute the integral :math:`K`.  The answer is returned with units. """
+    
+    prefactor = 1/np.power(ureg.Quantity(sample.z_r, 'm'), power+1)
+    
+    if isImag:
+        integral = integrate.quad(theta, 0., np.inf, args=(sample, omega, power, True))[0]
+    else:
+        integral = integrate.quad(theta, 0., np.inf, args=(sample, omega, power, False))[0]
+  
+    return (prefactor * integral).to_base_units()
+
+def gamma_perpendicular_jit(theta, sample):
+    """Compute the friction for a cantilever oscillating in the
+    perpendicular geometry.  Return a 3-element array, with units.
+    The elements are the K2, K1, and K0 terms, respectively."""
+
+    # The parameters sample_jit object lacks units, so add them back in manually
+
+    prefactor = -ureg.Quantity(sample.cantilever.V_ts, 'V')**2 /(4 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.omega_c, 'Hz'))
+    omega_c = sample.cantilever.omega_c
+
+    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+
+    c0 = CsphereOverSemi(index=0, 
+        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
+        radius=ureg.Quantity(sample.cantilever.R,'m'),
+        epsilon=sample.epsilon_s.real)
+        
+    c1 = CsphereOverSemi(index=1, 
+        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
+        radius=ureg.Quantity(sample.cantilever.R,'m'),
+        epsilon=sample.epsilon_s.real)
+    
+    # Return an array, with units, consisting of the three terms contributing to the total.
+    # Remove the units, create a list, convert the list to an array, and add back in the units.
+
+    result =  [( prefactor *     c0 * c0 * K_jit(2, theta, sample, omega_c, True)).to('pN s/m').magnitude,
+               (-prefactor * 2 * c0 * c1 * K_jit(1, theta, sample, omega_c, True)).to('pN s/m').magnitude,
+               ( prefactor *     c1 * c1 * K_jit(0, theta, sample, omega_c, True)).to('pN s/m').magnitude]
+        
+    return ureg.Quantity(np.ravel(np.array(result)), 'pN s/m')
+
+def blds_perpendicular_jit(theta, sample, omega_m):
+    """Compute the BLDS frequency-shift signal for a cantilever oscillating in the 
+    perpendicular geometry.  You are always going to want to compute a BLDS 
+    frequency-shift *spectrum*, so assume omega_m is a `numpy` array, with units, 
+    and loop over omega_m values. For example,
+    
+        omega_m = ureg.Quantity(2 * np.pi * np.logspace(1, 3, 3), 'Hz').
+    
+    """
+
+    # The parameters sample_jit object lacks units, so add them back in manually
+
+    prefactor = -(ureg.Quantity(sample.cantilever.f_c, 'Hz') * ureg.Quantity(sample.cantilever.V_ts, 'V')**2)/(16 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.k_c, 'N/m'))
+
+    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+
+    c0 = CsphereOverSemi(index=0, 
+        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
+        radius=ureg.Quantity(sample.cantilever.R,'m'),
+        epsilon=sample.epsilon_s.real)
+        
+    c1 = CsphereOverSemi(index=1, 
+        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
+        radius=ureg.Quantity(sample.cantilever.R,'m'),
+        epsilon=sample.epsilon_s.real)
+    
+    c2 = CsphereOverSemi(index=2, 
+        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
+        radius=ureg.Quantity(sample.cantilever.R,'m'),
+        epsilon=sample.epsilon_s.real)
+     
+    result = ureg.Quantity(np.zeros((len(omega_m), 3)), 'Hz')
+    for index, omega in enumerate(omega_m.to('Hz').magnitude):
+
+        # Return an array, with units, consisting of the three terms contributing to the total.
+        # Remove the units, create a list, convert the list to an array, and add back in the units.
+
+        result_list = [( prefactor     * c0 * c0 * K_jit(2, theta, sample, omega, False)).to('Hz').magnitude,
+                       (-prefactor * 2 * c0 * c1 * K_jit(1, theta, sample, omega, False)).to('Hz').magnitude,
+                       ( prefactor *     c0 * c2 * K_jit(0, theta, sample, omega, False)).to('Hz').magnitude]
+    
+        result[index,:] = ureg.Quantity(np.ravel(np.array(result_list)), 'Hz')
+        
+    return result
