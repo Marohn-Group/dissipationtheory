@@ -350,6 +350,8 @@ def theta1norm(psi, sample, omega, power, part=np.imag):
     Ld = np.sqrt(sample.D / omega).to('nm')
     epsilon_eff = (sample.epsilon_s - complex(0,1) * Ld**2 / sample.LD**2).to_base_units()
 
+    # Now the main calculation
+
     r1 = Ld**2 / (sample.epsilon_s * sample.LD**2)
     r2 = sample.z_r**2 / (sample.epsilon_s * sample.LD**2)
     r3 = sample.z_r**2 / Ld**2
@@ -422,7 +424,8 @@ def K(power, theta, sample, omega, part=np.imag):
 
 
 def gamma_perpendicular(theta, sample):
-    """Compute the friction coefficient for a cantilever oscillating in the perpendicular geometry."""
+    """Compute the friction coefficient for a cantilever oscillating in the perpendicular 
+    geometry. :math:`\\gamma_{\\perp}`."""
 
     prefactor = -sample.cantilever.V_ts**2 / (4 * np.pi * epsilon0 * sample.cantilever.omega_c)
     omega_c = sample.cantilever.omega_c
@@ -439,7 +442,7 @@ def gamma_perpendicular(theta, sample):
                (-prefactor * 2 * c0 * c1 * K(1, theta, sample, omega_c, np.imag)).to('pN s/m').magnitude,
                ( prefactor *     c1 * c1 * K(0, theta, sample, omega_c, np.imag)).to('pN s/m').magnitude]
     
-    return ureg.Quantity(np.ravel(np.array(result)), 'pN s/m')
+    return ureg.Quantity(np.ravel(np.array(result)), 'pN s/m')    
 
 def blds_perpendicular(theta, sample, omega_m):
     """Compute the BLDS frequency-shift signal for a cantilever oscillating in the 
@@ -473,51 +476,95 @@ def blds_perpendicular(theta, sample, omega_m):
         
     return result
 
-def BLDSpre(sample):
-    """The prefactor in Loring's approximation expressions for the BLDS spectrum."""
+def gamma_perpendicular_approx(sample, x):
+    """Low-density expansion for :math:`\\gamma_{\\perp}`.  The expansion is written
+    in terms of the unitless variable 
+    :math:`x = \\omega_0/(\\epsilon_{\\mathrm{s}}^{\\prime} \omega_{\mathrm{c}})`"""
+    
+    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+
+    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)        
+    c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
+
+    # Compute the critical density with units
+    
+    rhox = ((sample.cantilever.omega_c * epsilon0)/(qe * sample.mu)).to('1/m^3') 
+    r2  = ((sample.epsilon_s.real**2 + sample.epsilon_s.imag**2)/sample.epsilon_s.real).to('dimensionless').magnitude
+    rho2crit = r2 * rhox
+
+    # independent of rho, so we can precompute
+    
+    prefactor = -sample.cantilever.V_ts**2/(4 * np.pi * epsilon0 * sample.cantilever.omega_c)
+
+    es = sample.epsilon_s
+    a = ((es - 1)/(es + 1)).imag
+    b = (- (2 * complex(0,1) * es.real)/((1 + es)**2)).imag
+    
+    #a = -sample.epsilon_s.imag/(np.abs(sample.epsilon_s + 1)**2)
+    # b = sample.epsilon_s.real * ((1 + sample.epsilon_s.real)**2 - (sample.epsilon_s.imag)**2)/(np.abs(sample.epsilon_s + 1)**4)
+    
+    h = sample.cantilever.d
+    lims = np.array(
+        [( prefactor *     c0 * c0 / (4 * h**3)).to('pN s/m').magnitude,
+         (-prefactor * 2 * c0 * c1 / (4 * h**2)).to('pN s/m').magnitude,
+         ( prefactor *     c1 * c1 / (2 * h**1)).to('pN s/m').magnitude])
+
+    return np.outer(a.magnitude * np.ones_like(x), lims), np.outer((a.magnitude + b * x).magnitude, lims)
+
+def BLDSzerohigh(sample, x):
+    """Loring's high-density limit for the zero-frequency BLDS frequency shift
+    in the perpendicular geometry. The dependent variable here is 
+    :math:`x = (h/\lambda_{\mathrm{D}})^2`.
+    """
+
+    prefactor = -(sample.cantilever.f_c * sample.cantilever.V_ts**2)/(16 * np.pi * epsilon0 * sample.cantilever.k_c)
 
     # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
 
-    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)   
+    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)        
+    c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
+    c2 = CsphereOverSemi(2, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
 
-    a = sample.cantilever.f_c * c0**2 * sample.cantilever.V_ts**2
-    b = 16 * np.pi * epsilon0 * sample.cantilever.k_c * sample.cantilever.d**3
+    # array of limiting values
 
-    return (a/b).to('Hz')
+    h = sample.cantilever.d
+    lims = np.array(
+        [( prefactor *     c0 * c0 / (4 * h**3)).to('Hz').magnitude,
+         (-prefactor * 2 * c0 * c1 / (4 * h**2)).to('Hz').magnitude,
+         ( prefactor *     c0 * c2 / (2 * h**1)).to('Hz').magnitude])
 
-def BLDSlimits(sample, x):
-    """Loring's expansions for the BLDS frequency shift are carried out in terms of a unitless parameter 
-    :math:`x \equiv \left( \frac{h}{\lambda_{\mathrm{D}}} \right)^2` with with :math:`h` the tip-sample 
-    separation and :math:`\lambda_{\mathrm{D}}` the Debye length.  Given an array of :math:`x`-values,
-    return an array of values for the low-density (i.e., small :math:`x`) and high-density (i.e., 
-    large :math:`x`) limiting values of the absolute value of the BLDS frequency shift."""
+    return np.outer(np.ones_like(x), lims)
 
-    pre = BLDSpre(sample)
-    er = sample.epsilon_s.real.magnitude
-    a = 0.25 * (er - 1)/(er + 1)
-    ones = np.ones(len(x))
-    
-    return [pre * a * ones, pre * 0.25 * ones]
+def BLDSzerolow(sample, x):
+    """Loring's low-density limit for the zero-frequency BLDS frequency shift
+    in the perpendicular geometry.  The dependent variable here is 
+    :math:`x = (h/\lambda_{\mathrm{D}})^2`.
+    """
 
-def BLDSapprox(sample, x):
-    """Make a function to return Loring's low-density approximation for the BLDS frequency shift.  
-    The dependent variable here is :math:`x = (h/\lambda_{\mathrm{D}})^2`.  The approximation is of 
-    the form :math:`c_1 + c_2 x` with :math:`c_1` and :mathr:`c_2` constants.  The approximation
-    increases without bound at large :math:`x`.  Only return values where the approximate BLDS
-    frequency shift is less than the high-frequency limit.  Return a copy of the $x$ array where
-    this is true; this truncated $x$ array will be handy for plotting."""
+    er = sample.epsilon_s
+    a = ((er - 1)/(er + 1)).real.magnitude
 
-    pre = BLDSpre(sample)
-    _, BLDS_high = BLDSlimits(sample, x)
-    
-    er = sample.epsilon_s.real.magnitude
-    a = 0.25 * (er - 1)/(er + 1)
-    b = 0.50 / (er + 1)**2
+    return a * BLDSzerohigh(sample, x)
 
-    BLDS_approx = pre * (a + b * x)
-    mask = BLDS_approx.to('Hz').magnitude <= BLDS_high.to('Hz').magnitude
-    
-    return [x[mask], BLDS_approx[mask]]
+def BLDSapproxK2(sample, x):
+    """Make a function to return Loring's low-density approximation for the :math:`K_2` term in the 
+    BLDS frequency shift.  The dependent variable here is :math:`x = (h/\lambda_{\mathrm{D}})^2`. 
+    The approximation is of the form :math:`c_1 + c_2 x` with :math:`c_1` and :mathr:`c_2` 
+    constants.  The approximation increases without bound at large :math:`x`.  Only return values
+    where the approximate BLDS frequency shift is less than the high-frequency limit.  Return a
+    copy of the $x$ array where this is true; this truncated $x$ array will be handy for plotting.
+    """
+
+    f_high = BLDSzerohigh(sample, x)[:,0]
+
+    er = sample.epsilon_s
+    a = ((er - 1)/(er + 1)).real.magnitude
+    b = (2 / (er + 1)**2).real.magnitude
+
+    f_approx = (a + b * x) * BLDSzerohigh(sample, x)[:,0]
+    mask = np.abs(f_approx) <= np.abs(f_high)
+
+    return x[mask], f_approx[mask]
 
 CantileverModelSpec = [
     ('f_c',float64),
