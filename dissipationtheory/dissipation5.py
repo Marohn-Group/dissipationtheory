@@ -5,8 +5,6 @@
 import numpy as np
 import cmath
 from dissipationtheory.constants import ureg, epsilon0, qe, kb
-from dissipationtheory.capacitance import Csphere
-from dissipationtheory.capacitance import CsphereOverSemi
 from scipy import integrate
 from numba import jit
 from numba import float64, complex128, boolean
@@ -26,16 +24,18 @@ class CantileverModel(object):
     :param ureg.Quantity k_c: cantilever spring constant [N/m]
     :param ureg.Quantity V_ts: tip-sample voltage [V]
     :param ureg.Quantity R: tip radius [m], used to compute the tip charge
+    :param ureg.Quantity angle: tip cone half angle [degrees], used in numerical model to compute tip charge
     :param ureg.Quantity d: tip-sample separation [m], used to compute the tip charge
     :param ureg.Quantity z_c: tip-sample separation [m], location of the tip charge, typically set to zc = d + R
 
     """
-    def __init__(self, f_c, k_c, V_ts, R, d, z_c):
+    def __init__(self, f_c, k_c, V_ts, R, angle, d, z_c):
 
         self.f_c = f_c
         self.k_c = k_c
         self.V_ts = V_ts
         self.R = R
+        self.angle = angle
         self.d = d
         self.z_c = z_c
 
@@ -52,6 +52,7 @@ class CantileverModel(object):
         str = str + '        spring constant = {:.3f} N/m\n'.format(self.k_c.to('N/m').magnitude)
         str = str + '     tip-sample voltage = {:.3f} V\n'.format(self.V_ts.to('V').magnitude)
         str = str + '                 radius = {:.3f} nm\n'.format(self.R.to('nm').magnitude)
+        str = str + '        cone half angle = {:.3f} degree\n'.format(self.angle.to('degree').magnitude)
         str = str + '                 height = {:.3f} nm\n'.format(self.d.to('nm').magnitude)
         str = str + '  tip charge z location = {:.3f} nm\n'.format(self.z_c.to('nm').magnitude)
         
@@ -65,7 +66,8 @@ class CantileverModel(object):
                 f_c = ureg.Quantity(75, 'kHz'),
                 k_c = ureg.Quantity(2.8, 'N/m'), 
                 V_ts = ureg.Quantity(1, 'V'), 
-                R = ureg.Quantity(35, 'nm'), 
+                R = ureg.Quantity(35, 'nm'),
+                angle = ureg.Quantity(20, 'degree'), 
                 d = ureg.Quantity(38, 'nm'),
                 z_c = ureg.Quantity(73, 'nm')
             )
@@ -78,12 +80,13 @@ class CantileverModel(object):
             'k_c': self.k_c.to('N/m').magnitude, 
             'V_ts': self.V_ts.to('V').magnitude, 
             'R': self.R.to('m').magnitude,
+            'angle': self.angle.to('degree').magnitude,
             'd': self.d.to('m').magnitude,
             'z_c': self.z_c.to('m').magnitude
         }
 
         return args
-    
+
 class SampleModel1(object):
     """Model I sample object defined in Lekkala2013nov, Fig. 1(b)::
     
@@ -173,7 +176,8 @@ class SampleModel1(object):
                 f_c = ureg.Quantity(75, 'kHz'),
                 k_c = ureg.Quantity(2.8, 'N/m'), 
                 V_ts = ureg.Quantity(1, 'V'), 
-                R = ureg.Quantity(35, 'nm'), 
+                R = ureg.Quantity(35, 'nm'),
+                angle = ureg.Quantity(20, 'degree'), 
                 d = ureg.Quantity(38, 'nm'),
                 z_c = ureg.Quantity(73, 'nm')
             )
@@ -295,7 +299,8 @@ class SampleModel2(object):
                 f_c = ureg.Quantity(75, 'kHz'),
                 k_c = ureg.Quantity(2.8, 'N/m'), 
                 V_ts = ureg.Quantity(1, 'V'), 
-                R = ureg.Quantity(35, 'nm'), 
+                R = ureg.Quantity(35, 'nm'),
+                angle = ureg.Quantity(20, 'degree'), 
                 d = ureg.Quantity(38, 'nm'),
                 z_c = ureg.Quantity(73, 'nm')
             )
@@ -435,23 +440,18 @@ def gamma_perpendicular(theta, sample):
     """Compute the friction coefficient for a cantilever oscillating in the perpendicular 
     geometry. :math:`\\gamma_{\\perp}`."""
 
-    prefactor = -sample.cantilever.V_ts**2 / (4 * np.pi * epsilon0 * sample.cantilever.omega_c)
+    prefactor = -sample.cantilever.V_ts**2/(16 * np.pi * epsilon0 * sample.cantilever.omega_c)
+
     omega_c = sample.cantilever.omega_c
 
-    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+    # In Loring's new theory, c0 is the capacitance of the probe in the absence of the sample
 
-    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)        
-    c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
+    c0 = 4 * np.pi * epsilon0 * sample.cantilever.R
     
-    # Return an array, with units, consisting of the three terms contributing to the total.
-    # Remove the units, create a list, convert the list to an array, and add back in the units.
+    # Return a friction number with units
 
-    result =  [( prefactor *     c0 * c0 * K(2, theta, sample, omega_c, np.imag)).to('pN s/m').magnitude,
-               (-prefactor * 2 * c0 * c1 * K(1, theta, sample, omega_c, np.imag)).to('pN s/m').magnitude,
-               ( prefactor *     c1 * c1 * K(0, theta, sample, omega_c, np.imag)).to('pN s/m').magnitude]
-    
-    return ureg.Quantity(np.ravel(np.array(result)), 'pN s/m')    
-
+    return (prefactor * c0 * c0 * K(2, theta, sample, omega_c, np.imag)).to('pN s/m')
+ 
 def blds_perpendicular(theta, sample, omega_m):
     """Compute the BLDS frequency-shift signal for a cantilever oscillating in the 
     perpendicular geometry.  You are always going to want to compute a BLDS 
@@ -462,25 +462,19 @@ def blds_perpendicular(theta, sample, omega_m):
     
     """
 
-    prefactor = -(sample.cantilever.f_c * sample.cantilever.V_ts**2)/(16 * np.pi * epsilon0 * sample.cantilever.k_c)
+    prefactor = -(sample.cantilever.f_c * sample.cantilever.V_ts**2)/\
+                 (8 * np.pi * epsilon0 * sample.cantilever.k_c)
 
-    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+    # In Loring's new theory, c0 is the capacitance of the probe in the absence of the sample
 
-    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)        
-    c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
-    c2 = CsphereOverSemi(2, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
-     
-    result = ureg.Quantity(np.zeros((len(omega_m), 3)), 'Hz')
+    c0 = 4 * np.pi * epsilon0 * sample.cantilever.R
+
+    # Return a frequency shift with units
+
+    result = ureg.Quantity(np.zeros(len(omega_m)), 'Hz')
     for index, omega in enumerate(omega_m):
 
-        # Return an array, with units, consisting of the three terms contributing to the total.
-        # Remove the units, create a list, convert the list to an array, and add back in the units.
-
-        result_list = [( prefactor     * c0 * c0 * K(2, theta, sample, omega, np.real)).to('Hz').magnitude,
-                       (-prefactor * 2 * c0 * c1 * K(1, theta, sample, omega, np.real)).to('Hz').magnitude,
-                       ( prefactor *     c0 * c2 * K(0, theta, sample, omega, np.real)).to('Hz').magnitude]
-    
-        result[index,:] = ureg.Quantity(np.ravel(np.array(result_list)), 'Hz')
+        result[index] = (prefactor * c0 * c0 * K(2, theta, sample, omega, np.real)).to('Hz')
         
     return result
 
@@ -489,16 +483,15 @@ def gamma_perpendicular_approx(sample, x):
     in terms of the unitless variable 
     :math:`x = \\omega_0/(\\epsilon_{\\mathrm{s}}^{\\prime} \omega_{\mathrm{c}})`"""
     
-    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+    # In Loring's new theory, c0 is the capacitance of the probe in the absence of the sample
 
-    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)        
-    c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
-
-    # Compute the critical density with units
+    c0 = 4 * np.pi * epsilon0 * sample.cantilever.R
     
-    rhox = ((sample.cantilever.omega_c * epsilon0)/(qe * sample.mu)).to('1/m^3') 
-    r2  = ((sample.epsilon_s.real**2 + sample.epsilon_s.imag**2)/sample.epsilon_s.real).to('dimensionless').magnitude
-    rho2crit = r2 * rhox
+    # Compute the critical density with units
+    # 
+    # rhox = ((sample.cantilever.omega_c * epsilon0)/(qe * sample.mu)).to('1/m^3') 
+    # r2  = ((sample.epsilon_s.real**2 + sample.epsilon_s.imag**2)/sample.epsilon_s.real).to('dimensionless').magnitude
+    # rho2crit = r2 * rhox
 
     # independent of rho, so we can precompute
     
@@ -509,39 +502,30 @@ def gamma_perpendicular_approx(sample, x):
     b = (- (2 * complex(0,1) * es.real)/((1 + es)**2)).imag
  
     h = sample.cantilever.z_c
-    lims = np.array(
-        [( prefactor *     c0 * c0 / (4 * h**3)).to('pN s/m').magnitude,
-         (-prefactor * 2 * c0 * c1 / (4 * h**2)).to('pN s/m').magnitude,
-         ( prefactor *     c1 * c1 / (2 * h**1)).to('pN s/m').magnitude])
+    lim = ( prefactor * c0 * c0 / (4 * h**3)).to('pN s/m').magnitude
 
-    return np.outer(a.magnitude * np.ones_like(x), lims), np.outer((a.magnitude + b * x).magnitude, lims)
+    return a.magnitude * np.ones_like(x) *  lim, (a.magnitude + b * x).magnitude * lim
 
 def BLDSzerohigh(sample, x):
-    """Loring's high-density limit for the zero-frequency BLDS frequency shift
+    """Loring's high-charge-density limit for the zero-frequency BLDS frequency shift
     in the perpendicular geometry. The dependent variable here is 
     :math:`x = (h/\lambda_{\mathrm{D}})^2`.
     """
 
-    prefactor = -(sample.cantilever.f_c * sample.cantilever.V_ts**2)/(16 * np.pi * epsilon0 * sample.cantilever.k_c)
+    prefactor = -(sample.cantilever.f_c * sample.cantilever.V_ts**2)/(32 * np.pi * epsilon0 * sample.cantilever.k_c)
 
-    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+    # In Loring's new theory, c0 is the capacitance of the probe in the absence of the sample
 
-    c0 = CsphereOverSemi(0, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)        
-    c1 = CsphereOverSemi(1, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
-    c2 = CsphereOverSemi(2, sample.cantilever.d * np.ones(1), sample.cantilever.R, sample.epsilon_s.real.magnitude)
+    c0 = 4 * np.pi * epsilon0 * sample.cantilever.R
 
     # array of limiting values
 
     h = sample.cantilever.z_c
-    lims = np.array(
-        [( prefactor *     c0 * c0 / (4 * h**3)).to('Hz').magnitude,
-         (-prefactor * 2 * c0 * c1 / (4 * h**2)).to('Hz').magnitude,
-         ( prefactor *     c0 * c2 / (2 * h**1)).to('Hz').magnitude])
 
-    return np.outer(np.ones_like(x), lims)
+    return np.ones_like(x) * (prefactor * c0 * c0 / h**3).to('Hz').magnitude
 
 def BLDSzerolow(sample, x):
-    """Loring's low-density limit for the zero-frequency BLDS frequency shift
+    """Loring's low-charge-density limit for the zero-frequency BLDS frequency shift
     in the perpendicular geometry.  The dependent variable here is 
     :math:`x = (h/\lambda_{\mathrm{D}})^2`.
     """
@@ -576,18 +560,20 @@ CantileverModelSpec = [
     ('k_c', float64),
     ('V_ts', float64),
     ('R', float64),
+    ('angle', float64),
     ('d', float64),
     ('z_c', float64)] 
 
 @jitclass(CantileverModelSpec)
 class CantileverModelJit(object):
 
-    def __init__(self, f_c, k_c, V_ts, R, d, z_c):
+    def __init__(self, f_c, k_c, V_ts, R, angle, d, z_c):
 
         self.f_c = f_c
         self.k_c = k_c
         self.V_ts = V_ts
         self.R = R
+        self.angle = angle
         self.d = d
         self.z_c = z_c
 
@@ -602,6 +588,7 @@ class CantileverModelJit(object):
         print("        spring constant = ", self.k_c, "N/m")
         print("     tip-sample voltage = ", self.V_ts, "V")
         print("                 radius = ", self.R, "m")
+        print("        cone half angle = ", self.angle, "degree")
         print("                 height = ", self.d, "m")
         print("  tip charge z location = ", self.z_c, "m")
 
@@ -767,7 +754,7 @@ class SampleModel2Jit(object):
 #    instance of the function input "sample". 
 
 sample1 = SampleModel1Jit(
-    cantilever=CantileverModelJit(81.0e3, 2.8, 1., 80E-9, 300E-9, 380E-9),
+    cantilever=CantileverModelJit(81.0e3, 2.8, 1., 80E-9, 20., 300E-9, 380E-9),
     epsilon_s=complex(11.9,-0.05),
     h_s=3000E-9,
     sigma = 1e-8,
@@ -776,7 +763,7 @@ sample1 = SampleModel1Jit(
     z_r=300E-9)
 
 sample2 = SampleModel2Jit(
-    cantilever=CantileverModelJit(81.0e3, 2.8, 1., 80E-9, 300E-9, 380E-9),
+    cantilever=CantileverModelJit(81.0e3, 2.8, 1., 80E-9, 20., 300E-9, 380E-9),
     epsilon_d=complex(11.9,-0.05),
     h_d=0.,
     epsilon_s=complex(11.9,-0.05),
@@ -906,29 +893,18 @@ def gamma_perpendicular_jit(theta, sample):
 
     # The parameters sample_jit object lacks units, so add them back in manually
 
-    prefactor = -ureg.Quantity(sample.cantilever.V_ts, 'V')**2 /(4 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.omega_c, 'Hz'))
+    prefactor = -ureg.Quantity(sample.cantilever.V_ts, 'V')**2 / \
+                 (16 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.omega_c, 'Hz'))
+    
     omega_c = sample.cantilever.omega_c
 
-    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+    # In Loring's new theory, c0 is the capacitance of the probe in the absence of the sample
 
-    c0 = CsphereOverSemi(index=0, 
-        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
-        radius=ureg.Quantity(sample.cantilever.R,'m'),
-        epsilon=sample.epsilon_s.real)
-        
-    c1 = CsphereOverSemi(index=1, 
-        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
-        radius=ureg.Quantity(sample.cantilever.R,'m'),
-        epsilon=sample.epsilon_s.real)
-    
-    # Return an array, with units, consisting of the three terms contributing to the total.
-    # Remove the units, create a list, convert the list to an array, and add back in the units.
+    c0 = 4 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.R, 'm')
 
-    result =  [( prefactor *     c0 * c0 * K_jit(2, theta, sample, omega_c, True)).to('pN s/m').magnitude,
-               (-prefactor * 2 * c0 * c1 * K_jit(1, theta, sample, omega_c, True)).to('pN s/m').magnitude,
-               ( prefactor *     c1 * c1 * K_jit(0, theta, sample, omega_c, True)).to('pN s/m').magnitude]
-        
-    return ureg.Quantity(np.ravel(np.array(result)), 'pN s/m')
+    # Return a frequency shift with units
+
+    return (prefactor * c0 * c0 * K_jit(2, theta, sample, omega_c, True)).to('pN s/m')
 
 def blds_perpendicular_jit(theta, sample, omega_m):
     """Compute the BLDS frequency-shift signal for a cantilever oscillating in the 
@@ -942,35 +918,18 @@ def blds_perpendicular_jit(theta, sample, omega_m):
 
     # The parameters sample_jit object lacks units, so add them back in manually
 
-    prefactor = -(ureg.Quantity(sample.cantilever.f_c, 'Hz') * ureg.Quantity(sample.cantilever.V_ts, 'V')**2)/(16 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.k_c, 'N/m'))
+    prefactor = -(ureg.Quantity(sample.cantilever.f_c, 'Hz') * ureg.Quantity(sample.cantilever.V_ts, 'V')**2)/ \
+                 (8 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.k_c, 'N/m'))
 
-    # Use sample.epsilon_s.real, not sample.epsilon_d.real, to compute capacitance
+    # In Loring's new theory, c0 is the capacitance of the probe in the absence of the sample
 
-    c0 = CsphereOverSemi(index=0, 
-        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
-        radius=ureg.Quantity(sample.cantilever.R,'m'),
-        epsilon=sample.epsilon_s.real)
-        
-    c1 = CsphereOverSemi(index=1, 
-        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
-        radius=ureg.Quantity(sample.cantilever.R,'m'),
-        epsilon=sample.epsilon_s.real)
-    
-    c2 = CsphereOverSemi(index=2, 
-        height=ureg.Quantity(sample.cantilever.d,'m') * np.ones(1), 
-        radius=ureg.Quantity(sample.cantilever.R,'m'),
-        epsilon=sample.epsilon_s.real)
+    c0 = 4 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.R, 'm')
+
+    # Return a frequency shift with units
      
-    result = ureg.Quantity(np.zeros((len(omega_m), 3)), 'Hz')
+    result = ureg.Quantity(np.zeros(len(omega_m)), 'Hz')
     for index, omega in enumerate(omega_m.to('Hz').magnitude):
-
-        # Return an array, with units, consisting of the three terms contributing to the total.
-        # Remove the units, create a list, convert the list to an array, and add back in the units.
-
-        result_list = [( prefactor     * c0 * c0 * K_jit(2, theta, sample, omega, False)).to('Hz').magnitude,
-                       (-prefactor * 2 * c0 * c1 * K_jit(1, theta, sample, omega, False)).to('Hz').magnitude,
-                       ( prefactor *     c0 * c2 * K_jit(0, theta, sample, omega, False)).to('Hz').magnitude]
     
-        result[index,:] = ureg.Quantity(np.ravel(np.array(result_list)), 'Hz')
+        result[index] = (prefactor * c0 * c0 * K_jit(2, theta, sample, omega, False)).to('Hz')
         
     return result
