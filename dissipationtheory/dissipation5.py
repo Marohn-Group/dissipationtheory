@@ -10,6 +10,7 @@ from numba import jit
 from numba import float64, complex128, boolean
 from numba.experimental import jitclass
 from numba import deferred_type
+import pandas as pd
 
 class CantileverModel(object):
     """Cantilever object.  
@@ -440,7 +441,7 @@ def gamma_perpendicular(theta, sample):
     """Compute the friction coefficient for a cantilever oscillating in the perpendicular 
     geometry. :math:`\\gamma_{\\perp}`."""
 
-    prefactor = -sample.cantilever.V_ts**2/(16 * np.pi * epsilon0 * sample.cantilever.omega_c)
+    prefactor = -sample.cantilever.V_ts**2/(8 * np.pi * epsilon0 * sample.cantilever.omega_c)
 
     omega_c = sample.cantilever.omega_c
 
@@ -894,7 +895,7 @@ def gamma_perpendicular_jit(theta, sample):
     # The parameters sample_jit object lacks units, so add them back in manually
 
     prefactor = -ureg.Quantity(sample.cantilever.V_ts, 'V')**2 / \
-                 (16 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.omega_c, 'Hz'))
+                 (8 * np.pi * epsilon0 * ureg.Quantity(sample.cantilever.omega_c, 'Hz'))
     
     omega_c = sample.cantilever.omega_c
 
@@ -933,3 +934,42 @@ def blds_perpendicular_jit(theta, sample, omega_m):
         result[index] = (prefactor * c0 * c0 * K_jit(2, theta, sample, omega, False)).to('Hz')
         
     return result
+
+def calculate_vs_conductivity(theta, sample, omega_m, rho, sigma):
+    """Create a pandas dataframe row of useful results."""
+
+    df = pd.DataFrame()
+
+    for sigma_, rho_ in zip(sigma, rho):
+        
+        sample.rho = rho_.to('1/m^3').magnitude
+        sample.sigma = sigma_.to('S/m').magnitude
+    
+        gamma = gamma_perpendicular_jit(theta, sample).to('pN s/m')
+        f_BLDS = blds_perpendicular_jit(theta, sample, omega_m).to('Hz')
+        
+        ep = sample.epsilon_s.real   
+        z_c = ureg.Quantity(sample.cantilever.z_c, 'm')
+        LD = ureg.Quantity(sample.LD, 'm')
+        rho = ureg.Quantity(sample.rho, '1/m^3')
+        omega_0 = (ureg.Quantity(sample.sigma, 'S/m')/epsilon0).to('Hz')
+        omega_c = ureg.Quantity(sample.cantilever.omega_c, 'Hz')
+        
+        new_row = pd.DataFrame([
+            {'sigma [S/m]': sigma_.to('S/m').magnitude,
+             'rho [1/cm^3]': rho_.to('1/cm^3').magnitude,
+             'L_D [nm]': LD.to('nm').magnitude,
+             'rho scaled 1': (z_c**2/(LD**2)).to('').magnitude,
+             'rho scaled 2': (z_c**2/(ep * LD**2)).to('').magnitude,
+             'rho scaled 3': (z_c**2/(7.742 * ep * LD**2)).to('').magnitude,  # see below
+             'omega0 [Hz]': omega_0.to('Hz').magnitude,
+             'omega_c [Hz]': omega_c.to('Hz').magnitude,
+             'omega_c scaled': (omega_0/(ep * omega_c)).to('').magnitude,
+             'omega_m [Hz]': omega_m.to('Hz').magnitude,
+             'omega_m scaled': ((ep * omega_m)/omega_0).to('').magnitude,
+             'f_BLDS [Hz]': f_BLDS.to('Hz').magnitude, 
+             'gamma [pN s/m]': gamma.to('pN s/m').magnitude}])
+    
+        df = pd.concat([df, new_row], ignore_index=True)
+    
+    return df
