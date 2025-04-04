@@ -11,6 +11,9 @@ from numba import float64, complex128, boolean
 from numba.experimental import jitclass
 from numba import deferred_type
 import pandas as pd
+import matplotlib.pylab as plt
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 
 class CantileverModel(object):
     """Cantilever object.  
@@ -935,41 +938,162 @@ def blds_perpendicular_jit(theta, sample, omega_m):
         
     return result
 
-def calculate_vs_conductivity(theta, sample, omega_m, rho, sigma):
-    """Create a pandas dataframe row of useful results."""
+class ExptSweepConductivity(object):
 
-    df = pd.DataFrame()
+    def __init__(self, msg):
 
-    for sigma_, rho_ in zip(sigma, rho):
+        self.msg = msg
+        self.df = pd.DataFrame()
+
+    def calculate(self, theta, sample, omega_m, rho, sigma):
+        """Create a pandas dataframe row of useful results."""
+
+        for sigma_, rho_ in zip(sigma, rho):
+            
+            sample.rho = rho_.to('1/m^3').magnitude
+            sample.sigma = sigma_.to('S/m').magnitude
         
-        sample.rho = rho_.to('1/m^3').magnitude
-        sample.sigma = sigma_.to('S/m').magnitude
-    
-        gamma = gamma_perpendicular_jit(theta, sample).to('pN s/m')
-        f_BLDS = blds_perpendicular_jit(theta, sample, omega_m).to('Hz')
+            gamma = gamma_perpendicular_jit(theta, sample).to('pN s/m')
+            f_BLDS = blds_perpendicular_jit(theta, sample, omega_m).to('Hz')
+            
+            ep = sample.epsilon_s.real   
+            z_c = ureg.Quantity(sample.cantilever.z_c, 'm')
+            LD = ureg.Quantity(sample.LD, 'm')
+            rho = ureg.Quantity(sample.rho, '1/m^3')
+            omega_0 = (ureg.Quantity(sample.sigma, 'S/m')/epsilon0).to('Hz')
+            omega_c = ureg.Quantity(sample.cantilever.omega_c, 'Hz')
+            
+            new_row = pd.DataFrame([
+                {'sigma [S/m]': sigma_.to('S/m').magnitude,
+                'rho [1/cm^3]': rho_.to('1/cm^3').magnitude,
+                'L_D [nm]': LD.to('nm').magnitude,
+                'rho scaled 1': (z_c**2/(LD**2)).to('').magnitude,
+                'rho scaled 2': (z_c**2/(ep * LD**2)).to('').magnitude,
+                'rho scaled 3': (z_c**2/(7.742 * ep * LD**2)).to('').magnitude,  # see below
+                'omega0 [Hz]': omega_0.to('Hz').magnitude,
+                'omega_c [Hz]': omega_c.to('Hz').magnitude,
+                'omega_c scaled': (omega_0/(ep * omega_c)).to('').magnitude,
+                'omega_m [Hz]': omega_m.to('Hz').magnitude,
+                'omega_m scaled': ((ep * omega_m)/omega_0).to('').magnitude,
+                'f_BLDS [Hz]': f_BLDS.to('Hz').magnitude, 
+                'gamma [pN s/m]': gamma.to('pN s/m').magnitude}])
         
-        ep = sample.epsilon_s.real   
-        z_c = ureg.Quantity(sample.cantilever.z_c, 'm')
-        LD = ureg.Quantity(sample.LD, 'm')
-        rho = ureg.Quantity(sample.rho, '1/m^3')
-        omega_0 = (ureg.Quantity(sample.sigma, 'S/m')/epsilon0).to('Hz')
-        omega_c = ureg.Quantity(sample.cantilever.omega_c, 'Hz')
+            self.df = pd.concat([self.df, new_row], ignore_index=True)
+
+    def plot_BLDS(self, n=1, scaled=False):
+              
+        rho = self.df['rho [1/cm^3]'][::n]
         
-        new_row = pd.DataFrame([
-            {'sigma [S/m]': sigma_.to('S/m').magnitude,
-             'rho [1/cm^3]': rho_.to('1/cm^3').magnitude,
-             'L_D [nm]': LD.to('nm').magnitude,
-             'rho scaled 1': (z_c**2/(LD**2)).to('').magnitude,
-             'rho scaled 2': (z_c**2/(ep * LD**2)).to('').magnitude,
-             'rho scaled 3': (z_c**2/(7.742 * ep * LD**2)).to('').magnitude,  # see below
-             'omega0 [Hz]': omega_0.to('Hz').magnitude,
-             'omega_c [Hz]': omega_c.to('Hz').magnitude,
-             'omega_c scaled': (omega_0/(ep * omega_c)).to('').magnitude,
-             'omega_m [Hz]': omega_m.to('Hz').magnitude,
-             'omega_m scaled': ((ep * omega_m)/omega_0).to('').magnitude,
-             'f_BLDS [Hz]': f_BLDS.to('Hz').magnitude, 
-             'gamma [pN s/m]': gamma.to('pN s/m').magnitude}])
+        lists = zip(self.df['omega_m [Hz]'][::n], 
+                    self.df['omega_m scaled'][::n],
+                    self.df['f_BLDS [Hz]'][::n])
+
+        with plt.style.context('seaborn-v0_8'):
+
+            # colormap = plt.cm.jet
+            colormap = plt.cm.magma_r
+            color_list = [colormap(i) for i in np.linspace(0, 1, len(rho))]
+            
+            # color bar
+            normalized_colors = mcolors.LogNorm(vmin=min(rho), vmax=max(rho))
+            scalar_mappable = cm.ScalarMappable(norm=normalized_colors, cmap=colormap)
+            scalar_mappable.set_array(len(color_list))
+            
+            fig, ax = plt.subplots(figsize=(3.50, 2.5))
+            
+            for index, (omega_m, omega_m_scaled, f_BLDS) in enumerate(lists):
+                                    
+                if scaled:
+                    x = omega_m_scaled
+                    xlabel = 'scaled modulation freq. $\Omega_{\mathrm{m}} = ' \
+                            '(\epsilon_{\mathrm{s}}^{\prime} \omega_{\mathrm{m}})/\omega_0$'
+                else:
+                    x = omega_m
+                    xlabel = 'modulation freq. $\omega_{\mathrm{m}}$ [rad/s]'
+
+                plt.semilogx(x, np.abs(f_BLDS), '-', color=color_list[index])
+            
+            # color bar
+            clb=plt.colorbar(scalar_mappable, ax=ax)
+            clb.ax.set_title(r'$\rho \: [\mathrm{cm}^{-3}]$', fontsize=12)
+            
+            plt.ylabel(r'$\vert \Delta f_{\mathrm{BLDS}} \vert$ [Hz]')
+            plt.xlabel(xlabel)
+            plt.tight_layout()
+        
+        return fig    
+
+    def plot_BLDS_zero(self):
+        
+        y = np.array([x[0] for x in self.df['f_BLDS [Hz]'].values])
+        x1 = self.df['rho scaled 3'].values
+        x2 = self.df['rho [1/cm^3]'].values
+        
+        # Define functions to convert from  $\hat{\rho}$ to $\rho$ and back again
     
-        df = pd.concat([df, new_row], ignore_index=True)
+        c = (x2/x1)[0]
+        fwd = lambda x1: x1*c
+        rev = lambda x2: x2/c 
+
+        with plt.style.context('seaborn-v0_8'):
+        
+            fig, ax1 = plt.subplots(1, 1, figsize=(3.50, 2.75))
+            
+            ax1.semilogx(x1, y)
+            ax1.set_ylabel(r'$\Delta f_{\mathrm{BLDS}}(\omega_{\mathrm{m}}=0)$ [Hz]')
+            
+            if plt.rcParams['text.usetex']:
+                ax1.set_xlabel(
+                    r'scaled charge density $\hat{\rho}_3 = '
+                    r'z^2_{\mathrm{c}} \Big/ 7.742 \, \epsilon^{\prime}_{\mathrm{s}} \lambda^2_{\mathrm{D}}$')
+            else:
+                 ax1.set_xlabel(
+                    r'scaled charge density $\hat{\rho}_3 = '
+                    r'z^2_{\mathrm{c}} \: / \: 7.742 \, \epsilon^{\prime}_{\mathrm{s}} \lambda^2_{\mathrm{D}}$')
+                    
+            ax2 = ax1.secondary_xaxis("top", functions=(fwd,rev))
+            ax2.set_xlabel(r'charge density $\rho$ [cm$^{-3}$]')
+            plt.tight_layout()
+            
+        return fig
     
-    return df
+    def plot_friction(self):
+        
+        y = self.df['gamma [pN s/m]'].values
+        x1 = self.df['omega_c scaled'].values
+        x2 = self.df['rho [1/cm^3]'].values
+        
+        # Define functions to convert from  $\hat{\rho}$ to $\rho$ and back again
+    
+        c = (x2/x1)[0]
+        fwd = lambda x1: x1*c
+        rev = lambda x2: x2/c 
+
+        with plt.style.context('seaborn-v0_8'):
+        
+            fig, ax1 = plt.subplots(1, 1, figsize=(3.25, 2.50))
+            
+            ax1.semilogx(x1, y)
+            ax1.set_ylabel((r'friction $\gamma_{\perp}$ [pN s/m]'))
+            ax1.set_xlabel(r'scaled frequency $\Omega_0 = '
+                           r'\omega_0/(\epsilon_{\mathrm{s}}^{\prime} \omega_{\mathrm{c}})$')
+                    
+            ax2 = ax1.secondary_xaxis("top", functions=(fwd,rev))
+            ax2.set_xlabel(r'charge density $\rho$ [cm$^{-3}$]')
+            plt.tight_layout()
+            
+        return fig
+
+def latex_float(f):
+    """Example function call.
+
+        latex_float(3e-7)
+        => '$3.0 \\times 10^{-7}$'
+        
+    """
+    float_str = "{0:.1e}".format(f)
+    if "e" in float_str:
+        base, exponent = float_str.split("e")
+        return r"${0} \times 10^{{{1}}}$".format(base, int(exponent))
+    else:
+        return float_str    
