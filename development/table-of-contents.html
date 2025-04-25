@@ -36,7 +36,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 <ul>
 <li>author: John A. Marohn</li>
 <li>created: 2024-10-29</li>
-<li>last updated: 2024-10-29</li>
+<li>last updated: 2025-04-18</li>
 </ul>
 <p>In the <code>dissipationtheory/development</code> folder there are a
 number of <em>studies</em> — Jupyter notebooks in which I experimented
@@ -369,6 +369,53 @@ sample. The (negative) derivative of this energy function is a force.
 Compare Loring’s expression for the force to Xu’s published results, our
 calculation of Xu’s results, and the standard Kelvin probe
 formula.</p></li>
+<li><p><strong>Study 37</strong> (<a
+href="dissipation-theory--Study-37.html">html</a>). Compare <span
+class="math inline">\(f_2 \: [\mathrm{Hz}/\mathrm{V}^2]\)</span> versus
+<span class="math inline">\(h \: [\mathrm{nm}]\)</span> data measured
+over gold to calculations employing the following tip models: (a) Two
+approximations describing a spherical tip (Loring); (b) Hoepker’s
+analytical sphere-plus-cone model; and (c) Marohn’s numerical
+sphere-plus-cone model. Perform the fit using Marohn’s numerical
+sphere-plus-cone model with the tip radius and cone angle as best-fit
+parameters. Conclude that a cone-plus-sphere tip model is required to
+fit <span class="math inline">\(f_2\)</span> versus <span
+class="math inline">\(h\)</span> data over a metal. Being able to fit
+<span class="math inline">\(f_2\)</span> versus <span
+class="math inline">\(h\)</span> data to Marohn’s numerical model of a
+sphere-plus-cone tip over a metal sample is a significant finding,
+because this model can be extended to a semiconductor sample.</p></li>
+<li><p><strong>Study 38</strong> (<a
+href="dissipation-theory--Study-38.html">html</a>). The code in
+<code>dissipation5.py</code> now implements Roger Loring’s revised
+theory for the non-contact friction and broadband local dielectric
+spectroscopy frequency shift experienced by a charged cantilever,
+idealized as a point probe, over a semiconductor. Check that, for an
+“infinitely thick” sample, the BLDS frequency shift at <span
+class="math inline">\(\omega_{\mathrm{m}} = 0\)</span> has the expected
+dependence on charge density and, at <span class="math inline">\(\rho
+\rightarrow 0\)</span> and <span class="math inline">\(\rho \rightarrow
+\infty\)</span>, agrees with Loring’s analytical limiting-case formulas.
+Find that the BLDS frequency shift does not show the expected trend with
+scaled charge density.</p></li>
+<li><p><strong>Study 39</strong> (<a
+href="dissipation-theory--Study-39.html">html</a>). Repeat the Study 34
+analysis using <code>dissipation5.py</code> code.</p></li>
+<li><p><strong>Study 40</strong> (<a
+href="dissipation-theory--Study-40.html">html</a>). Examine closely the
+dependence of the <span
+class="math inline">\(K_2(\omega_{\mathrm{m}})\)</span> integral on
+charge density and dielectric constant. Define a new unitless charge
+density <span class="math inline">\(\rho_3\)</span> such that the <span
+class="math inline">\(K_2\)</span> integral reaches its half point at
+<span class="math inline">\(\rho_3 = 1\)</span>.</p></li>
+<li><p><strong>Study 41</strong> (<a
+href="dissipation-theory--Study-41.html">html</a>). Repeat Study 34
+employing a perovskite-like sample and the <code>dissipation5.py</code>
+code, which uses the new Loring formulas for BLDS frequency shift and
+non-contact friction. In this study I realize a nice, compact way to
+loop over material parameters and generate a composite figure with a
+legend; the method does not require much new code.</p></li>
 </ul>
 </body>
 </html>

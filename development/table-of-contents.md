@@ -4,7 +4,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 
 - author: John A. Marohn
 - created: 2024-10-29
-- last updated: 2024-10-29
+- last updated: 2025-04-18
 
 In the `dissipationtheory/development` folder there are a number of *studies* --- Jupyter notebooks in which I experimented with calculation and data-analysis code.  The studies have names like `dissipation-theory--Study-1.ipynb` and so forth.  Here I summarize these studies.  
 
@@ -96,4 +96,15 @@ Compare Marohn's numerical calcualtions to Loring's low-density and high-density
 - **Study 35** ([html](dissipation-theory--Study-35.html)).  Numerically compute Lekkala and Loring’s reaction-field Green’s functions $K_0$, $K_1$, and  $K_2$ and plot them versus charge location $z_\mathrm{c}$, for (1) a metal and (2) a semiconductor. Show that the metal’s Green’s functions are just the image-charge potential and are therefore real. Show that the semiconductor’s Green’s functions differs from the metal’s, and have imaginary components.
 
 - **Study 36** ([html](dissipation-theory--Study-36.html)).  Loring has proposed an energy function for test charges interaction with a semiconductor sample. The (negative) derivative of this energy function is a force. Compare Loring’s expression for the force to Xu’s published results, our calculation of Xu’s results, and the standard Kelvin probe formula.
+
+- **Study 37** ([html](dissipation-theory--Study-37.html)).  Compare 
+$f_2 \: [\mathrm{Hz}/\mathrm{V}^2]$ versus $h \: [\mathrm{nm}]$ data measured over gold to calculations employing the following tip models: (a) Two approximations describing a spherical tip (Loring); (b) Hoepker’s analytical sphere-plus-cone model; and (c) Marohn’s numerical sphere-plus-cone model. Perform the fit using Marohn’s numerical sphere-plus-cone model with the tip radius and cone angle as best-fit parameters.  Conclude that a cone-plus-sphere tip model is required to fit $f_2$ versus $h$ data over a metal.  Being able to fit $f_2$ versus $h$ data to Marohn’s numerical model of a sphere-plus-cone tip over a metal sample is a significant finding, because this model can be extended to a semiconductor sample.
+
+- **Study 38** ([html](dissipation-theory--Study-38.html)).  The code in `dissipation5.py` now implements Roger Loring’s revised theory for the non-contact friction and broadband local dielectric spectroscopy frequency shift experienced by a charged cantilever, idealized as a point probe, over a semiconductor. Check that, for an "infinitely thick" sample, the BLDS frequency shift at $\omega_{\mathrm{m}} = 0$ has the expected dependence on charge density and, at $\rho \rightarrow 0$ and $\rho \rightarrow \infty$, agrees with Loring's analytical limiting-case formulas. Find that the BLDS frequency shift does not show the expected trend with scaled charge density.  
+
+- **Study 39** ([html](dissipation-theory--Study-39.html)). Repeat the Study 34 analysis using `dissipation5.py` code.
+
+- **Study 40** ([html](dissipation-theory--Study-40.html)).  Examine closely the dependence of the $K_2(\omega_{\mathrm{m}})$ integral on charge density and dielectric constant.  Define a new unitless charge density $\rho_3$ such that the $K_2$ integral reaches its half point at $\rho_3 = 1$.
+
+- **Study 41** ([html](dissipation-theory--Study-41.html)).  Repeat Study 34 employing a perovskite-like sample and the `dissipation5.py` code, which uses the new Loring formulas for BLDS frequency shift and non-contact friction.  In this study I realize a nice, compact way to loop over material parameters and generate a composite figure with a legend; the method does not require much new code.
 

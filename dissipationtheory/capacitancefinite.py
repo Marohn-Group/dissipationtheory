@@ -6,7 +6,7 @@ class twodimCobject():
     def addsphere(self, r, h, Nz, Nr):
         """Model a sphere of radius $r$ above a ground plane, with a tip-sample
         separation of $h$.  Create image-charge points $r_j$ and voltage-test 
-        points $r_k$.  The $N_z$ image-charge points are placed along a verical
+        points $r_k$.  The $N_z$ image-charge points are placed along a vertical
         line extending from $h + 0.1 r$ to $h + 1.90 r$. The $N_r$ voltage-test 
         points are located uniformly around the sphere, starting at the south 
         pole, $\theta = -\pi/2$, and rotating counter clockwise. Initialize the
