@@ -4,7 +4,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 
 - author: John A. Marohn
 - created: 2024-10-29
-- last updated: 2025-04-18
+- last updated: 2025-05-02
 
 In the `dissipationtheory/development` folder there are a number of *studies* --- Jupyter notebooks in which I experimented with calculation and data-analysis code.  The studies have names like `dissipation-theory--Study-1.ipynb` and so forth.  Here I summarize these studies.  
 
@@ -107,4 +107,6 @@ $f_2 \: [\mathrm{Hz}/\mathrm{V}^2]$ versus $h \: [\mathrm{nm}]$ data measured ov
 - **Study 40** ([html](dissipation-theory--Study-40.html)).  Examine closely the dependence of the $K_2(\omega_{\mathrm{m}})$ integral on charge density and dielectric constant.  Define a new unitless charge density $\rho_3$ such that the $K_2$ integral reaches its half point at $\rho_3 = 1$.
 
 - **Study 41** ([html](dissipation-theory--Study-41.html)).  Repeat Study 34 employing a perovskite-like sample and the `dissipation5.py` code, which uses the new Loring formulas for BLDS frequency shift and non-contact friction.  In this study I realize a nice, compact way to loop over material parameters and generate a composite figure with a legend; the method does not require much new code.
+
+- **Study 42** ([html](dissipation-theory--Study-42.html)). Repeat the Study 39 analysis using Loring’s new 2025-04-17 formulas implemented in the `dissipation6.py` code. Find that the BLDS frequency diverges at high modulation frequency.
 
