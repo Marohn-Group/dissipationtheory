@@ -1,3 +1,7 @@
+<!--
+pandoc README.md -o README.html --css pandoc.css -s --mathjax --metadata title="README for dissipationtheory package" && open README.html 
+-->
+
 # dissipationtheory
 
 Compute atomic force microscope cantilever dissipation and frequency noise over metals and dielectrics.  Compute cantilever capacitance using a sphere plus a cone model.

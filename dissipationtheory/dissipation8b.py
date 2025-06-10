@@ -7,6 +7,7 @@ import cmath
 from dissipationtheory.constants import ureg, epsilon0, qe, kb
 from scipy import integrate
 import scipy
+import pint
 from numba import jit
 import numba.types as nb_types
 from numba import float64, complex128, boolean
@@ -315,3 +316,58 @@ def K_jit(integrand, power, sample, omega, location, isImag):
         integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location, False))[0]
   
     return (prefactor * integral).to_base_units()
+
+def gamma_perpendicular_jit(integrand, sample, location):
+    """Compute the friction for a cantilever oscillating in the perpendicular 
+    geometry using equation 33 in Roger Loring's 2025-06-05 document."""
+
+    # Shorthand
+
+    wc = sample.cantilever.omega_c
+
+    # The parameters sample_jit object lacks units, so add them back in manually
+
+    R = ureg.Quantity(sample.cantilever.R, 'm')
+    V = ureg.Quantity(sample.cantilever.V_ts, 'V')
+    omega_c = ureg.Quantity(wc, 'Hz')
+
+    # Main formula
+
+    q0 = 4 * np.pi * epsilon0 * R * V
+
+    prefactor = -q0**2 / (8 * np.pi * epsilon0 * omega_c)
+    gamma = prefactor * K_jit(integrand, 2, sample, wc, location, True)
+
+    # Return a frequency shift with units
+
+    return gamma.to('pN s/m')
+
+def freq_perpendicular_jit(integrand, sample, location):
+    """Compute the frequency shift for a cantilever oscillating in the perpendicular 
+    geometry using equations 30 and 31 in Roger Loring's 2025-06-05 document."""
+
+    # Shorthand
+
+    fc = sample.cantilever.f_c
+    wc = sample.cantilever.omega_c
+    kc = sample.cantilever.k_c
+
+    # The parameters sample_jit object lacks units, so add them back in manually
+
+    R = ureg.Quantity(sample.cantilever.R, 'm')
+    V = ureg.Quantity(sample.cantilever.V_ts, 'V')
+    f_c = ureg.Quantity(fc, 'Hz')
+    k_c = ureg.Quantity(kc, 'N/m')
+
+    # Main formulas
+
+    q0 = 4 * np.pi * epsilon0 * R * V
+
+    prefactor1 = -(f_c * q0**2) / (4 * np.pi * epsilon0 * k_c)
+    prefactor2 = -(f_c * q0**2) / (16 * np.pi * epsilon0 * k_c)
+
+    df1 = prefactor1 * K_jit(integrand, 2, sample, 0, location, False)
+    df2 = prefactor2 * (K_jit(integrand, 2, sample, wc, location, False)
+                      - K_jit(integrand, 2, sample, 0, location, False))
+    
+    return pint.Quantity.from_list([df1, df2]).to('Hz')

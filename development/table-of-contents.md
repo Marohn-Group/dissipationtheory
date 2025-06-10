@@ -4,7 +4,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 
 - author: John A. Marohn
 - created: 2024-10-29
-- last updated: 2025-06-09
+- last updated: 2025-06-10
 
 In the `dissipationtheory/development` folder there are a number of *studies* --- Jupyter notebooks in which I experimented with calculation and data-analysis code.  The studies have names like `dissipation-theory--Study-1.ipynb` and so forth.  Here I summarize these studies.  
 
@@ -113,3 +113,5 @@ $f_2 \: [\mathrm{Hz}/\mathrm{V}^2]$ versus $h \: [\mathrm{nm}]$ data measured ov
 - **Study 43** ([html](dissipation-theory--Study-43.html)). Representative BLDS spectra and perpendicular friction plotted versus unitless parameters. Repeat the Study 39 analysis using Loring's new 2025-05-14 formulas implemented in the `dissipation7.py` code.  The new formula correctly predicts a dc cantilever frequency shift that increases with increasing charge density (light intensity).
 
 - **Study 44** ([html](dissipation-theory--Study-44.html)). Testing new functions for calculating $\theta_{I}$, $\theta_{II}$, and $K_{\ell}$. Test code for calculating the functions $\theta_{I}$, $\theta_{II}$, and $K_{\ell}$.  This notebook tests functions imported from `dissipationtheory8a.py` (pure Python) and `dissipationtheory8b.py` (numba/jit).  These functions are tested against functions imported from `dissipationtheory7.py` (pure Python and numba/jit).  In contrast with the functions in `dissipationtheory7.py`, the functions in `dissipationtheory8a.py` and `dissipationtheory8a.py` are well-behaved in the $\omega \rightarrow 0$ limit. The function $K_2$ is computed at a selected position for representative Type I and Type II samples.  We show that $K_0$ computed over a "metallic" Type I and Type II sample gives the expected unitless image-charge potential.
+
+- **Study 45** ([html](dissipation-theory--Study-45.html)). Test code for computing friction, $\gamma$, and frequency shift, $\Delta f_{\mathrm{stat}}$ and $\Delta f_{\mathrm{dyn}}$, for a cantilever oscillating in the perpendicular geometry over a thick Type I semiconductor sample.  Import code from `dissipationtheory8a.py` and `dissipationtheory8b.py`. Develop a data class `ExptSweepConductivity` which computes and plots friction and frequency shift for varied conductivity and charge density.
