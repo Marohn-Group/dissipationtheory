@@ -36,7 +36,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 <ul>
 <li>author: John A. Marohn</li>
 <li>created: 2024-10-29</li>
-<li>last updated: 2025-05-02</li>
+<li>last updated: 2025-06-09</li>
 </ul>
 <p>In the <code>dissipationtheory/development</code> folder there are a
 number of <em>studies</em> — Jupyter notebooks in which I experimented
@@ -421,6 +421,35 @@ href="dissipation-theory--Study-42.html">html</a>). Repeat the Study 39
 analysis using Loring’s new 2025-04-17 formulas implemented in the
 <code>dissipation6.py</code> code. Find that the BLDS frequency diverges
 at high modulation frequency.</p></li>
+<li><p><strong>Study 43</strong> (<a
+href="dissipation-theory--Study-43.html">html</a>). Representative BLDS
+spectra and perpendicular friction plotted versus unitless parameters.
+Repeat the Study 39 analysis using Loring’s new 2025-05-14 formulas
+implemented in the <code>dissipation7.py</code> code. The new formula
+correctly predicts a dc cantilever frequency shift that increases with
+increasing charge density (light intensity).</p></li>
+<li><p><strong>Study 44</strong> (<a
+href="dissipation-theory--Study-44.html">html</a>). Testing new
+functions for calculating <span
+class="math inline">\(\theta_{I}\)</span>, <span
+class="math inline">\(\theta_{II}\)</span>, and <span
+class="math inline">\(K_{\ell}\)</span>. Test code for calculating the
+functions <span class="math inline">\(\theta_{I}\)</span>, <span
+class="math inline">\(\theta_{II}\)</span>, and <span
+class="math inline">\(K_{\ell}\)</span>. This notebook tests functions
+imported from <code>dissipationtheory8a.py</code> (pure Python) and
+<code>dissipationtheory8b.py</code> (numba/jit). These functions are
+tested against functions imported from
+<code>dissipationtheory7.py</code> (pure Python and numba/jit). In
+contrast with the functions in <code>dissipationtheory7.py</code>, the
+functions in <code>dissipationtheory8a.py</code> and
+<code>dissipationtheory8a.py</code> are well-behaved in the <span
+class="math inline">\(\omega \rightarrow 0\)</span> limit. The function
+<span class="math inline">\(K_2\)</span> is computed at a selected
+position for representative Type I and Type II samples. We show that
+<span class="math inline">\(K_0\)</span> computed over a “metallic” Type
+I and Type II sample gives the expected unitless image-charge
+potential.</p></li>
 </ul>
 </body>
 </html>

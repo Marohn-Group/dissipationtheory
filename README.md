@@ -143,10 +143,88 @@ $ pip install .[test]
 $ python -m pytest
 ```
 
-## 
+### Total lines of code 
 
 The lines of code in the repository can be viewed by running
 
 ```
 git ls-files *.py | xargs wc -l
+```
+
+### Upgrading poetry
+
+To implement the bessel function `scipy.special.j0` in a jit-compiled function, the numba-scipy package is required.  This could in principle be added using `poetry add numba-scipy` bit this adding procedure could not resolve the environment (after 20 minutes).
+
+In principle, after exiting poetry and conda, I should be able to run `poetry self update` to update poetry.  However, I got the error "The current project's Python requirement (3.8.5) is not compatible with some of the required packages Python requirement".  Poetry requires a Python version <4.0 and >=3.9.
+So let me create a conda environment with Python 3.10 as follows.
+
+```
+$ conda deactivate
+$ conda create -n py310 python=3.10 
+```
+
+This installation takes a while.  Now activate the new Python environment and try to update poetry
+
+```
+$ conda activate py310
+$ poetry self update
+```
+
+This updating fails with the error "The current project's Python requirement (3.8.5) is not compatible ...".  Exercise the "nuclear option" by re-installing poetry as follows.
+
+```
+$ curl -sSL https://install.python-poetry.org | python3 -
+$ poetry --version
+Poetry (version 2.1.3)
+$ which poetry
+/Users/jam99/.local/bin/poetry
+$ which python
+/Users/jam99/opt/anaconda3/envs/py310/bin/python
+```
+
+Poetry no longer has a `shell` command. Ugh. Install all packages, update the lock, and activate the resulting environment following directions [here](https://python-poetry.org/docs/managing-environments/).  I have listed `scipy` as a package in the `.toml` file, so if Python can import `scipy` then I have entered the virtual environment ok.
+
+```
+$ poetry install --all-extras
+$ poetry lock
+$ $ poetry env activate
+source /Users/jam99/Library/Caches/pypoetry/virtualenvs/dissipationtheory-Uvi85QQO-py3.10/bin/activate
+$ eval $(poetry env activate)
+$ python -c "import scipy"
+```
+
+Now try adding the `numba-scipy` package.  Frustratingly, this addition fails.  It is not clear from the convoluted error message what the problem is.  Remove the `scipy` line from the `pyproject.toml` file, run `poetry install --all-extras` and `poetry lock`.  Surprisingly, the `scipy` package is still installed.
+
+```$ poetry show | grep "scipy"
+scipy 1.15.3
+```
+
+Running the command 
+
+```
+poetry show --tree | more
+```
+
+is helpful.  I can see that the `scipy` package is required by `freqdemod` and `lmfit`.  I hypothesize that this is why poetry did not uninstall `scipy` when asked.  Let me try adding `numba-scipy` by more carefully specifying the Python version.  In the `.toml` file, specify the version of Python as follows:
+
+```
+python = "3.10.2"
+```
+
+Now run `poetry install --all-extras`, `poetry lock`, and try
+
+```
+$ poetry add numba-scipy
+```
+
+Happily, the environment resolves in 1.1s! The `scipy` package is downgraded from version 1.15.3 to 1.10.1 and the `numba-scipy` package 0.4.0 is installed.  I get the message "Writing lock file" and I can see that a line
+
+```
+numba-scipy = "^0.4.0"
+```
+
+has been added to the `pyproject.toml` file.  Finally, update Jupyter
+
+```
+$ poetry run ipython kernel install --user --name=dissipationtheory
 ```
