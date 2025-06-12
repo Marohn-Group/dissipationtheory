@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="John A. Marohn">
-<meta name="dcterms.date" content="2025-06-09">
+<meta name="dcterms.date" content="2025-06-12">
 
 <title>Testing new functions for calculating \theta_{I}, \theta_{II}, and K_{\ell}</title>
 <style>
@@ -3273,7 +3273,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 9, 2025</p>
+      <p class="date">June 12, 2025</p>
     </div>
   </div>
   
@@ -3627,26 +3627,26 @@ semiconductor
 <div id="9e809449" class="cell" data-execution_count="19">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>integrand1(<span class="fl">1.01</span>, <span class="dv">2</span>, sample1_v8a, ureg.Quantity(<span class="dv">0</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>integrand1(<span class="fl">1.01</span>, <span class="dv">2</span>, sample1_v8a, ureg.Quantity(<span class="dv">0</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="19">
-<pre><code>0.9260801207768308</code></pre>
+<pre><code>0.9261562258439279</code></pre>
 </div>
 </div>
 <div id="0162f3a3" class="cell" data-execution_count="20">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>integrand2(<span class="fl">1.01</span>, <span class="dv">2</span>, sample2_v8a, ureg.Quantity(<span class="dv">0</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>integrand2(<span class="fl">1.01</span>, <span class="dv">2</span>, sample2_v8a, ureg.Quantity(<span class="dv">0</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="20">
-<pre><code>0.8970645217251304</code></pre>
+<pre><code>0.897138242296477</code></pre>
 </div>
 </div>
 <p>Compute <span class="math inline">\(K_2\)</span> for Sample 1.</p>
 <div id="94bc7303" class="cell" data-execution_count="21">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>resultB1 <span class="op">=</span> K_v8a(integrand1, <span class="dv">2</span>, sample1_v8a, ureg.Quantity(<span class="fl">0.001</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">20</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>resultB1 <span class="op">=</span> K_v8a(integrand1, <span class="dv">2</span>, sample1_v8a, ureg.Quantity(<span class="fl">0.001</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">20</span>], <span class="st">&#39;nm&#39;</span>), ureg.Quantity([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">20</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>resultB1.to(<span class="st">&#39;1/um**3&#39;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="21">
@@ -3657,7 +3657,7 @@ semiconductor
 <div id="8c340e80" class="cell" data-execution_count="22">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>resultB2 <span class="op">=</span> K_v8a(integrand2, <span class="dv">2</span>, sample2_v8a, ureg.Quantity(<span class="fl">0.001</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">20</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>resultB2 <span class="op">=</span> K_v8a(integrand2, <span class="dv">2</span>, sample2_v8a, ureg.Quantity(<span class="fl">0.001</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">20</span>], <span class="st">&#39;nm&#39;</span>), ureg.Quantity([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">20</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>resultB2.to(<span class="st">&#39;1/um**3&#39;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="22">
@@ -3770,60 +3770,60 @@ semiconductor
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="op">%%</span>time</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>integrand2jit(<span class="fl">1.01</span>, <span class="dv">2</span>, sample2_jit, <span class="fl">0.</span>, np.array([<span class="fl">2e-9</span>, <span class="fl">5e-9</span>, <span class="fl">10e-9</span>]), <span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>integrand2jit(<span class="fl">1.01</span>, <span class="dv">2</span>, sample2_jit, <span class="fl">0.</span>, np.array([<span class="fl">2e-9</span>, <span class="fl">5e-9</span>, <span class="fl">10e-9</span>]), np.array([<span class="fl">2e-9</span>, <span class="fl">5e-9</span>, <span class="fl">10e-9</span>]), <span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>CPU times: user 196 μs, sys: 27 μs, total: 223 μs
-Wall time: 231 μs</code></pre>
+<pre><code>CPU times: user 139 μs, sys: 101 μs, total: 240 μs
+Wall time: 246 μs</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="27">
-<pre><code>0.8970645217251303</code></pre>
+<pre><code>0.8971382422964769</code></pre>
 </div>
 </div>
 <div id="ea86e786-962b-4025-86fa-767d35a53da0" class="cell" data-execution_count="28">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="op">%%</span>time</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>integrand2(<span class="fl">1.01</span>, <span class="dv">2</span>, sample2_v8a, ureg.Quantity(<span class="dv">0</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>integrand2(<span class="fl">1.01</span>, <span class="dv">2</span>, sample2_v8a, ureg.Quantity(<span class="dv">0</span>,<span class="st">&#39;Hz&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), ureg.Quantity([<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>], <span class="st">&#39;nm&#39;</span>), part<span class="op">=</span>np.real)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>CPU times: user 6.58 ms, sys: 585 μs, total: 7.17 ms
-Wall time: 16.3 ms</code></pre>
+<pre><code>CPU times: user 4.42 ms, sys: 949 μs, total: 5.36 ms
+Wall time: 5.01 ms</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="28">
-<pre><code>0.8970645217251304</code></pre>
+<pre><code>0.897138242296477</code></pre>
 </div>
 </div>
 <p>Pleasingly, we get nearly the same result using both jit and Python. The jit function is about 100-fold faster.</p>
 <p>Compute <span class="math inline">\(K_2\)</span> for Sample 1 using jit code.</p>
-<div id="b47f2dc7-f620-4810-97b7-05e95983f151" class="cell" data-execution_count="40">
+<div id="b47f2dc7-f620-4810-97b7-05e95983f151" class="cell" data-execution_count="29">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="op">%%</span>time</span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>resultC1 <span class="op">=</span> K_jit(integrand1jit, <span class="dv">2</span>, sample1_jit, <span class="fl">0.001</span>, np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), <span class="va">False</span>)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>resultC1 <span class="op">=</span> K_jit(integrand1jit, <span class="dv">2</span>, sample1_jit, <span class="fl">0.001</span>, np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), <span class="va">False</span>)</span>
 <span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>resultC1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>CPU times: user 1.08 ms, sys: 6 μs, total: 1.09 ms
-Wall time: 1.1 ms</code></pre>
+<pre><code>CPU times: user 2.28 ms, sys: 329 μs, total: 2.61 ms
+Wall time: 3.46 ms</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="40">
+<div class="cell-output cell-output-display" data-execution_count="29">
 2.832029282621744×10<sup>22</sup> 1/meter<sup>3</sup>
 </div>
 </div>
 <p>Compute <span class="math inline">\(K_2\)</span> for Sample 2 using jit code.</p>
-<div id="705dc35d-89e7-47d0-9c4a-cfe5e15c7158" class="cell" data-execution_count="41">
+<div id="705dc35d-89e7-47d0-9c4a-cfe5e15c7158" class="cell" data-execution_count="30">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="op">%%</span>time</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>resultC2 <span class="op">=</span> K_jit(integrand2jit, <span class="dv">2</span>, sample2_jit, <span class="fl">0.001</span>, np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), <span class="va">False</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>resultC2 <span class="op">=</span> K_jit(integrand2jit, <span class="dv">2</span>, sample2_jit, <span class="fl">0.001</span>, np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), <span class="va">False</span>)</span>
 <span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>resultC2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>CPU times: user 1.59 ms, sys: 15 μs, total: 1.6 ms
-Wall time: 1.64 ms</code></pre>
+<pre><code>CPU times: user 1.43 ms, sys: 61 μs, total: 1.49 ms
+Wall time: 1.54 ms</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="41">
+<div class="cell-output cell-output-display" data-execution_count="30">
 2.82798579785767×10<sup>22</sup> 1/meter<sup>3</sup>
 </div>
 </div>
@@ -3838,7 +3838,7 @@ Wall time: 1.64 ms</code></pre>
 <li>(Study C) “new jit” <code>v8b</code></li>
 </ul>
 <p>Display the fractional error, taking the <code>v7</code> code as the ground truth.</p>
-<div id="de30f83e-8022-4f8a-8371-cc5f7c508f0f" class="cell" data-execution_count="70">
+<div id="de30f83e-8022-4f8a-8371-cc5f7c508f0f" class="cell" data-execution_count="31">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compare(A,B):</span>
@@ -3849,7 +3849,7 @@ Wall time: 1.64 ms</code></pre>
 <section id="compare-study-a-to-study-b" class="level2" data-number="5.1">
 <h2 data-number="5.1" class="anchored" data-anchor-id="compare-study-a-to-study-b"><span class="header-section-number">5.1</span> Compare Study A to Study B</h2>
 <p>Sample 1</p>
-<div id="e1cdb373-39db-4264-b3c2-ea3053fbffcb" class="cell" data-execution_count="71">
+<div id="e1cdb373-39db-4264-b3c2-ea3053fbffcb" class="cell" data-execution_count="32">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>compare(resultA1, resultB1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3859,7 +3859,7 @@ Wall time: 1.64 ms</code></pre>
 </div>
 </div>
 <p>Sample 2</p>
-<div id="b9c921ca" class="cell" data-execution_count="72">
+<div id="b9c921ca" class="cell" data-execution_count="33">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>compare(resultA2, resultB2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3872,7 +3872,7 @@ Wall time: 1.64 ms</code></pre>
 <section id="compare-study-a-to-study-c" class="level2" data-number="5.2">
 <h2 data-number="5.2" class="anchored" data-anchor-id="compare-study-a-to-study-c"><span class="header-section-number">5.2</span> Compare Study A to Study C</h2>
 <p>Sample 1</p>
-<div id="64516a87-6bbb-4664-8234-6cf7ea620825" class="cell" data-execution_count="73">
+<div id="64516a87-6bbb-4664-8234-6cf7ea620825" class="cell" data-execution_count="34">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>compare(resultA1, resultC1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3882,7 +3882,7 @@ Wall time: 1.64 ms</code></pre>
 </div>
 </div>
 <p>Sample 2</p>
-<div id="2f730a96" class="cell" data-execution_count="74">
+<div id="2f730a96" class="cell" data-execution_count="35">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>compare(resultA2, resultC2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3896,7 +3896,7 @@ Wall time: 1.64 ms</code></pre>
 <section id="conclusions" class="level1" data-number="6">
 <h1 data-number="6"><span class="header-section-number">6</span> Conclusions</h1>
 <p>Finally, we emphasize that the new <code>K</code> (in <code>dissipation8a.py</code>) and <code>K_jit</code> (in <code>dissipation8b.py</code>) functions are well behaved at zero frequency. Here are two examples, computing <span class="math inline">\(K_0\)</span> for Sample 1 and Sample 2 at <span class="math inline">\(\omega = 0\)</span>.</p>
-<div id="ea0fd3d7-2fa8-4da6-80d9-1c03276aa80a" class="cell" data-execution_count="95">
+<div id="ea0fd3d7-2fa8-4da6-80d9-1c03276aa80a" class="cell" data-execution_count="37">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>K_jit(</span>
@@ -3904,14 +3904,15 @@ Wall time: 1.64 ms</code></pre>
 <span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    power<span class="op">=</span><span class="dv">0</span>, </span>
 <span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    sample<span class="op">=</span>sample1_jit, </span>
 <span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    omega<span class="op">=</span><span class="dv">0</span>,</span>
-<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    location<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), </span>
-<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>).to(<span class="st">&#39;1/um&#39;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    location1<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]),</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>    location2<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), </span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>).to(<span class="st">&#39;1/um&#39;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="95">
+<div class="cell-output cell-output-display" data-execution_count="37">
 23.206670538554317 1/micrometer
 </div>
 </div>
-<div id="12eec4a5-0c67-4756-8c85-871ee266d988" class="cell" data-execution_count="96">
+<div id="12eec4a5-0c67-4756-8c85-871ee266d988" class="cell" data-execution_count="39">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>K_jit(</span>
@@ -3919,10 +3920,11 @@ Wall time: 1.64 ms</code></pre>
 <span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    power<span class="op">=</span><span class="dv">0</span>, </span>
 <span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    sample<span class="op">=</span>sample2_jit, </span>
 <span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    omega<span class="op">=</span><span class="dv">0</span>,</span>
-<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>    location<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), </span>
-<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>).to(<span class="st">&#39;1/um&#39;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>    location1<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]),</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>    location2<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), </span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>).to(<span class="st">&#39;1/um&#39;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="96">
+<div class="cell-output cell-output-display" data-execution_count="39">
 22.910064305128017 1/micrometer
 </div>
 </div>
@@ -3934,28 +3936,29 @@ We have coded the functions <span class="math inline">\(\theta_{I}\)</span>, <sp
 <h1 data-number="7"><span class="header-section-number">7</span> Explore vectorization</h1>
 <p>We want to loop over the frequency (to compute a BDLS spectrum) or over locations (to compute the response function at various heights). It would be nice to not have to write loops all the time. Look into the <code>np.vectorize</code> function.</p>
 <p>In the following example, I am able to loop over a <em>list</em> of frequencies <span class="math inline">\(\omega\)</span>. This looping would be useful in computing a BLDS spectrum. In the function below, the <code>otypes=[object]</code> is needed because the <code>K_jit</code> function returns a <code>pint</code> object with units.</p>
-<div id="6fecd80d-3115-42ba-b9f4-35c5fbf16166" class="cell" data-execution_count="75">
+<div id="6fecd80d-3115-42ba-b9f4-35c5fbf16166" class="cell" data-execution_count="41">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the arguments: integrand, power, sample, omega, location, isImag</span></span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>K_jit_vectorized <span class="op">=</span> np.vectorize(K_jit, otypes<span class="op">=</span>[<span class="bu">object</span>], excluded<span class="op">=</span>[<span class="st">&#39;integrand&#39;</span>,<span class="st">&#39;power&#39;</span>,<span class="st">&#39;sample&#39;</span>,<span class="st">&#39;location&#39;</span>,<span class="st">&#39;isImag&#39;</span>])</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>K_jit_vectorized <span class="op">=</span> np.vectorize(K_jit, otypes<span class="op">=</span>[<span class="bu">object</span>], excluded<span class="op">=</span>[<span class="st">&#39;integrand&#39;</span>,<span class="st">&#39;power&#39;</span>,<span class="st">&#39;sample&#39;</span>,<span class="st">&#39;location1&#39;</span>,<span class="st">&#39;location2&#39;</span>,<span class="st">&#39;isImag&#39;</span>])</span>
 <span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>K_jit_vectorized(</span>
 <span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    integrand<span class="op">=</span>integrand2jit, </span>
 <span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>    power<span class="op">=</span><span class="dv">2</span>, </span>
 <span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>    sample<span class="op">=</span>sample2_jit, </span>
 <span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a>    omega<span class="op">=</span>[<span class="fl">0.000</span>, <span class="fl">0.001</span>],</span>
-<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a>    location<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), </span>
-<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a>    location1<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), </span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>    location2<span class="op">=</span>np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), </span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="75">
+<div class="cell-output cell-output-display" data-execution_count="41">
 <pre><code>array([&lt;Quantity(2.827985797857637e+22, &#39;1 / meter ** 3&#39;)&gt;,
        &lt;Quantity(2.82798579785767e+22, &#39;1 / meter ** 3&#39;)&gt;], dtype=object)</code></pre>
 </div>
 </div>
 <p>This same approach does not enable looping over the vector <code>location</code>. The following code fails. I tried using the <code>signature</code> argument, but this approach failed.</p>
-<div id="2a3bff30-6387-409a-8928-d955dc34a5c5" class="cell" data-execution_count="76">
+<div id="2a3bff30-6387-409a-8928-d955dc34a5c5" class="cell" data-execution_count="43">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="dv">0</span>:</span>
@@ -3966,25 +3969,26 @@ We have coded the functions <span class="math inline">\(\theta_{I}\)</span>, <sp
 <span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>        power<span class="op">=</span><span class="dv">2</span>, </span>
 <span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>        sample<span class="op">=</span>sample2_jit, </span>
 <span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>        omega<span class="op">=</span><span class="fl">0.001</span>,</span>
-<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>        location<span class="op">=</span>[np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]),np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">40e-9</span>])], </span>
-<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>        isImag<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>        location1<span class="op">=</span>[np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]),np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">40e-9</span>])],</span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>        location2<span class="op">=</span>[np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]),np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">40e-9</span>])],</span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>        isImag<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Idea: We could just use a list comprehension …</p>
-<div id="784e25c2-98e8-40f3-94d4-751f28aa208c" class="cell" data-execution_count="77">
+<div id="784e25c2-98e8-40f3-94d4-751f28aa208c" class="cell" data-execution_count="44">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> [K_jit(integrand2jit, <span class="dv">2</span>, sample2_jit, <span class="fl">0.001</span>, location, <span class="va">False</span>)</span>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> [K_jit(integrand2jit, <span class="dv">2</span>, sample2_jit, <span class="fl">0.001</span>, location, location, <span class="va">False</span>)</span>
 <span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>     <span class="cf">for</span> location <span class="kw">in</span> [np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">20e-9</span>]), np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">40e-9</span>])]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>… and turn the resulting list into a numpy array with units using the <code>pint.Quantity.from_list</code> utility function.</p>
-<div id="04708111-898a-4b1b-a961-6a3c66432ad4" class="cell" data-execution_count="78">
+<div id="04708111-898a-4b1b-a961-6a3c66432ad4" class="cell" data-execution_count="45">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>pint.Quantity.from_list(result).to(<span class="st">&#39;1/um^3&#39;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="78">
+<div class="cell-output cell-output-display" data-execution_count="45">
 <table class="caption-top table table-sm table-striped small" data-quarto-postprocess="true">
 <colgroup>
 <col style="width: 50%">
@@ -4013,7 +4017,7 @@ We have coded the functions <span class="math inline">\(\theta_{I}\)</span>, <sp
 <h1 data-number="8"><span class="header-section-number">8</span> Check that <span class="math inline">\(K_0\)</span> over a “metal” is the expected image potential</h1>
 <section id="sample-1" class="level2" data-number="8.1">
 <h2 data-number="8.1" class="anchored" data-anchor-id="sample-1"><span class="header-section-number">8.1</span> Sample 1</h2>
-<div id="d1fc1a86-48fb-486d-be0f-4a8acd68fb81" class="cell" data-execution_count="165">
+<div id="d1fc1a86-48fb-486d-be0f-4a8acd68fb81" class="cell" data-execution_count="46">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>sample1_metal <span class="op">=</span> SampleModel1_v8a(</span>
@@ -4027,7 +4031,7 @@ We have coded the functions <span class="math inline">\(\theta_{I}\)</span>, <sp
 <span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="204e0e69-7bfb-4a58-ada2-f6860aa3ad61" class="cell" data-execution_count="166">
+<div id="204e0e69-7bfb-4a58-ada2-f6860aa3ad61" class="cell" data-execution_count="47">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>sample1_jit_metal <span class="op">=</span> SampleModel1Jit(<span class="op">**</span>sample1_metal.args())</span>
@@ -4066,7 +4070,7 @@ dielectric
 </div>
 </div>
 <p>Compute <span class="math inline">\(K_0\)</span> for this “metallic” type 1 sample.</p>
-<div id="f5a4ad40-c802-4b49-8753-eadac49f7f8b" class="cell" data-execution_count="183">
+<div id="f5a4ad40-c802-4b49-8753-eadac49f7f8b" class="cell" data-execution_count="48">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>K_I <span class="op">=</span> K_jit(</span>
@@ -4074,28 +4078,29 @@ dielectric
 <span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    power<span class="op">=</span><span class="dv">0</span>, </span>
 <span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    sample<span class="op">=</span>sample1_jit_metal, </span>
 <span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>    omega<span class="op">=</span><span class="dv">0</span>,</span>
-<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>    location<span class="op">=</span>np.array([<span class="fl">3e-9</span>, <span class="fl">5e-9</span>, <span class="fl">10e-9</span>]), </span>
-<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>).to(<span class="st">&#39;1/um&#39;</span>)</span>
-<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>K_I</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>    location1<span class="op">=</span>np.array([  <span class="dv">0</span>,     <span class="dv">0</span>, <span class="fl">10e-9</span>]),</span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>    location2<span class="op">=</span>np.array([<span class="fl">3e-9</span>, <span class="fl">5e-9</span>, <span class="fl">10e-9</span>]), </span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>).to(<span class="st">&#39;1/um&#39;</span>)</span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a>K_I</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="183">
+<div class="cell-output cell-output-display" data-execution_count="48">
 48.00143564666106 1/micrometer
 </div>
 </div>
 <p>Compute the expected unitless image potential. We see that it agrees closely <span class="math inline">\(K_0\)</span> compute above.</p>
-<div id="a7348470-9bf0-48a8-90ae-021d8474cf87" class="cell" data-execution_count="190">
+<div id="a7348470-9bf0-48a8-90ae-021d8474cf87" class="cell" data-execution_count="49">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>K_image <span class="op">=</span> (<span class="dv">1</span><span class="op">/</span>ureg.Quantity(np.sqrt(<span class="dv">3</span><span class="op">**</span><span class="dv">2</span> <span class="op">+</span> <span class="dv">5</span><span class="op">**</span><span class="dv">2</span> <span class="op">+</span> <span class="dv">20</span><span class="op">**</span><span class="dv">2</span>),<span class="st">&#39;nm&#39;</span>)).to(<span class="st">&#39;1/um&#39;</span>)</span>
 <span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>K_image</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="190">
+<div class="cell-output cell-output-display" data-execution_count="49">
 48.00153607373192 1/micrometer
 </div>
 </div>
 <p>Compare <span class="math inline">\(K_0\)</span> for type 1 metallic sample to the image potential.</p>
-<div id="981f444d-5762-4a96-9bc0-8ce6db0f814b" class="cell" data-execution_count="191">
+<div id="981f444d-5762-4a96-9bc0-8ce6db0f814b" class="cell" data-execution_count="50">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>compare(K_I, K_image)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -4107,7 +4112,7 @@ dielectric
 </section>
 <section id="sample-2" class="level2" data-number="8.2">
 <h2 data-number="8.2" class="anchored" data-anchor-id="sample-2"><span class="header-section-number">8.2</span> Sample 2</h2>
-<div id="2c969b5a-e420-4984-865f-0123ac119034" class="cell" data-execution_count="169">
+<div id="2c969b5a-e420-4984-865f-0123ac119034" class="cell" data-execution_count="51">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb71"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>sample2_metal <span class="op">=</span> SampleModel2_v8a(</span>
@@ -4121,7 +4126,7 @@ dielectric
 <span id="cb71-9"><a href="#cb71-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="856c51ff-2b4b-43aa-97fa-3b987a64bb10" class="cell" data-execution_count="170">
+<div id="856c51ff-2b4b-43aa-97fa-3b987a64bb10" class="cell" data-execution_count="52">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>sample2_jit_metal <span class="op">=</span> SampleModel2Jit(<span class="op">**</span>sample2_metal.args())</span>
@@ -4160,7 +4165,7 @@ semiconductor
 </div>
 </div>
 <p>Compute <span class="math inline">\(K_0\)</span> for this “metallic” type 2 sample.</p>
-<div id="c94482a3-b7b3-434c-af56-04aebc0a8b98" class="cell" data-execution_count="188">
+<div id="c94482a3-b7b3-434c-af56-04aebc0a8b98" class="cell" data-execution_count="53">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>K_II <span class="op">=</span> K_jit(</span>
@@ -4168,17 +4173,18 @@ semiconductor
 <span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>    power<span class="op">=</span><span class="dv">0</span>, </span>
 <span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    sample<span class="op">=</span>sample2_jit_metal, </span>
 <span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>    omega<span class="op">=</span><span class="dv">0</span>,</span>
-<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>    location<span class="op">=</span>np.array([<span class="fl">3e-9</span>, <span class="fl">5e-9</span>, <span class="fl">10e-9</span>]), </span>
-<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>).to(<span class="st">&#39;1/um&#39;</span>)</span>
-<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb74-9"><a href="#cb74-9" aria-hidden="true" tabindex="-1"></a>K_II</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>    location1<span class="op">=</span>np.array([  <span class="dv">0</span>,     <span class="dv">0</span>, <span class="fl">10e-9</span>]),</span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>    location2<span class="op">=</span>np.array([<span class="fl">3e-9</span>, <span class="fl">5e-9</span>, <span class="fl">10e-9</span>]), </span>
+<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a>    isImag<span class="op">=</span><span class="va">False</span>).to(<span class="st">&#39;1/um&#39;</span>)</span>
+<span id="cb74-9"><a href="#cb74-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-10"><a href="#cb74-10" aria-hidden="true" tabindex="-1"></a>K_II</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="188">
+<div class="cell-output cell-output-display" data-execution_count="53">
 48.00145327358575 1/micrometer
 </div>
 </div>
 <p>Compare <span class="math inline">\(K_0\)</span> for type 2 metallic sample to the image potential.</p>
-<div id="8c0af171-1f4c-4f1e-bea7-ff8ead81ffa7" class="cell" data-execution_count="189">
+<div id="8c0af171-1f4c-4f1e-bea7-ff8ead81ffa7" class="cell" data-execution_count="54">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>compare(K_II, K_image)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
