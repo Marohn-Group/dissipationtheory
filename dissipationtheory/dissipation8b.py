@@ -222,8 +222,14 @@ def mycsch_jit(x):
 # the numba-scipy package is required. See README.md for the (painful) upgrade procedure.
 # I ended up having to reinstall poetry!
 
-@jit(float64(float64,float64,SampleModel1Jit.class_type.instance_type,float64,nb_types.float64[::1],boolean), nopython=True)
-def integrand1jit(y, power, sample, omega, location, isImag):
+@jit(float64(float64,
+             float64,
+             SampleModel1Jit.class_type.instance_type,float64,
+             nb_types.float64[::1],
+             nb_types.float64[::1],
+             boolean), nopython=True)
+
+def integrand1jit(y, power, sample, omega, location1, location2, isImag):
     """Theta function for the Sample I geometry of Lekkala.
     
     In the code below, `y` is the unitless integration variable."""
@@ -257,10 +263,10 @@ def integrand1jit(y, power, sample, omega, location, isImag):
     theta_norm = t1 + (n1 + n2 + n3)/d1
     rp = (1 - theta_norm) / (1 + theta_norm)
 
-    rhoX = location[0] / zr
-    rhoY = location[1] / zr
+    rhoX = (location1[0] - location2[0])/ zr
+    rhoY = (location1[1] - location2[1])/ zr
     argument = y * np.sqrt(rhoX**2 + rhoY**2)
-    exponent = y * 2 * location[2] / zr
+    exponent = y * (location1[2] + location2[2])/ zr
 
     if isImag:
         integrand = y**power * scipy.special.j0(argument) * np.exp(-1 * exponent) * np.imag(rp) 
@@ -269,8 +275,15 @@ def integrand1jit(y, power, sample, omega, location, isImag):
 
     return integrand
 
-@jit(float64(float64,float64,SampleModel2Jit.class_type.instance_type,float64,nb_types.float64[::1],boolean), nopython=True)
-def integrand2jit(y, power, sample, omega, location, isImag):
+@jit(float64(float64,
+             float64,
+             SampleModel2Jit.class_type.instance_type,
+             float64,
+             nb_types.float64[::1],
+             nb_types.float64[::1],
+             boolean), nopython=True)
+
+def integrand2jit(y, power, sample, omega, location1, location2, isImag):
     """Theta function for the Sample II geometry of Lekkala.
     
     In the code below, `y` is the unitless integration variable."""
@@ -291,10 +304,10 @@ def integrand2jit(y, power, sample, omega, location, isImag):
     theta_norm = p7 * (p7 * cmath.tanh(theta2) + p6 + p1)/(p7 + (p6 + p1) * cmath.tanh(theta2))
     rp = (1 - theta_norm) / (1 + theta_norm)
 
-    rhoX = location[0] / zr
-    rhoY = location[1] / zr
+    rhoX = (location1[0] - location2[0])/ zr
+    rhoY = (location1[1] - location2[1])/ zr
     argument = y * np.sqrt(rhoX**2 + rhoY**2)
-    exponent = y * 2 * location[2] / zr
+    exponent = y * (location1[2] + location2[2])/ zr
 
     if isImag:
         integrand = y**power * scipy.special.j0(argument) * np.exp(-1 * exponent) * np.imag(rp) 
@@ -305,15 +318,15 @@ def integrand2jit(y, power, sample, omega, location, isImag):
 
 # Can't jit this because it outputs an answer with units
 
-def K_jit(integrand, power, sample, omega, location, isImag):
+def K_jit(integrand, power, sample, omega, location1, location2, isImag):
     """Compute the integral :math:`K`.  The answer is returned with units. """
     
     prefactor = 1/np.power(ureg.Quantity(sample.z_r, 'm'), power+1)
 
     if isImag:
-        integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location, True))[0]
+        integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location1, location2, True))[0]
     else:
-        integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location, False))[0]
+        integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location1, location2, False))[0]
   
     return (prefactor * integral).to_base_units()
 
@@ -336,7 +349,7 @@ def gamma_perpendicular_jit(integrand, sample, location):
     q0 = 4 * np.pi * epsilon0 * R * V
 
     prefactor = -q0**2 / (8 * np.pi * epsilon0 * omega_c)
-    gamma = prefactor * K_jit(integrand, 2, sample, wc, location, True)
+    gamma = prefactor * K_jit(integrand, 2, sample, wc, location, location, True)
 
     # Return a frequency shift with units
 
@@ -366,8 +379,8 @@ def freq_perpendicular_jit(integrand, sample, location):
     prefactor1 = -(f_c * q0**2) / (4 * np.pi * epsilon0 * k_c)
     prefactor2 = -(f_c * q0**2) / (16 * np.pi * epsilon0 * k_c)
 
-    df1 = prefactor1 * K_jit(integrand, 2, sample, 0, location, False)
-    df2 = prefactor2 * (K_jit(integrand, 2, sample, wc, location, False)
-                      - K_jit(integrand, 2, sample, 0, location, False))
+    df1 = prefactor1 * K_jit(integrand, 2, sample, 0, location, location, False)
+    df2 = prefactor2 * (K_jit(integrand, 2, sample, wc, location, location, False)
+                      - K_jit(integrand, 2, sample, 0, location, location, False))
     
     return pint.Quantity.from_list([df1, df2]).to('Hz')

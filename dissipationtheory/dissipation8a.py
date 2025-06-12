@@ -314,7 +314,7 @@ def mycsch(x):
     
     return values
 
-def integrand1(y, power, sample, omega, location, part=np.imag):
+def integrand1(y, power, sample, omega, location1, location2, part=np.imag):
     """Theta function for the Sample I geometry of Lekkala.
     
     In the code below, `y` is the unitless integration variable."""
@@ -347,16 +347,16 @@ def integrand1(y, power, sample, omega, location, part=np.imag):
     theta_norm = t1 + (n1 + n2)/d1
     rp = ((1 - theta_norm) / (1 + theta_norm)).to('dimensionless').magnitude
 
-    rhoX = (location[0] / zr).to('dimensionless').magnitude
-    rhoY = (location[1] / zr).to('dimensionless').magnitude
+    rhoX = ((location1[0] - location2[0]) / zr).to('dimensionless').magnitude
+    rhoY = ((location1[1] - location2[1])/ zr).to('dimensionless').magnitude
     argument = y * np.sqrt(rhoX**2 + rhoY**2)
-    exponent = y * (2 * location[2] / zr).to('dimensionless').magnitude
+    exponent = y * ((location1[2] + location2[2])/ zr).to('dimensionless').magnitude
 
     integrand = y**power * j0(argument) * np.exp(-1 * exponent) * part(rp) 
 
     return integrand
 
-def integrand2(y, power, sample, omega, location, part=np.imag):
+def integrand2(y, power, sample, omega, location1, location2, part=np.imag):
     """Theta function for the Sample II geometry of Lekkala.
     
     In the code below, `y` is the unitless integration variable."""
@@ -377,19 +377,19 @@ def integrand2(y, power, sample, omega, location, part=np.imag):
     theta_norm = p7 * (p7 * np.tanh(theta2) + p6 + p1)/(p7 + (p6 + p1) * np.tanh(theta2))
     rp = ((1 - theta_norm) / (1 + theta_norm)).to('dimensionless').magnitude
 
-    rhoX = (location[0] / zr).to('dimensionless').magnitude
-    rhoY = (location[1] / zr).to('dimensionless').magnitude
+    rhoX = ((location1[0] - location2[0]) / zr).to('dimensionless').magnitude
+    rhoY = ((location1[1] - location2[1])/ zr).to('dimensionless').magnitude
     argument = y * np.sqrt(rhoX**2 + rhoY**2)
-    exponent = y * (2 * location[2] / zr).to('dimensionless').magnitude
+    exponent = y * ((location1[2] + location2[2])/ zr).to('dimensionless').magnitude
 
     integrand = y**power * j0(argument) * np.exp(-1 * exponent) * part(rp) 
 
     return integrand
 
-def K(integrand, power, sample, omega, location, part=np.imag):
+def K(integrand, power, sample, omega, location1, location2, part=np.imag):
     """Compute the integral :math:`K`."""
     
     prefactor = 1/np.power(sample.z_r, power+1)    
-    integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location, part))[0]
+    integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location1, location2, part))[0]
     
     return (prefactor * integral).to_base_units()
