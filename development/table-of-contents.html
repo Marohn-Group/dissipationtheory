@@ -461,6 +461,110 @@ code from <code>dissipationtheory8a.py</code> and
 <code>dissipationtheory8b.py</code>. Develop a data class
 <code>ExptSweepConductivity</code> which computes and plots friction and
 frequency shift for varied conductivity and charge density.</p></li>
+<li><p><strong>Study 46</strong> (<a
+href="dissipation-theory--Study-46.html">html</a>). Develop code for a
+point probe of finite size. Develop code for computing friction, <span
+class="math inline">\(\gamma\)</span>, and frequency shift, <span
+class="math inline">\(\Delta f\)</span>, for a finite-size tip.
+Resources include Loring’s typeset 2025-06-09 notes; Marohn’s
+handwritten 2025-06-10, 2025-06-11, 2025-06-12, and 2025-06-14 notes;
+code in <code>capacitancefinite.py</code>; and code in Study 30 (<a
+href="dissipation-theory--Study-30.html">html</a>), Study 31 (<a
+href="dissipation-theory--Study-31.html">html</a>), Study 33 (<a
+href="dissipation-theory--Study-33.html">html</a>), and Study 37 (<a
+href="dissipation-theory--Study-37.html">html</a>). See Study 41 (<a
+href="dissipation-theory--Study-41.html">html</a>) for a compact way to
+loop over material parameters and generate a composite figure with a
+legend. Here I compute the capacitance (and associated derivatives)
+<span class="math inline">\(C_0\)</span>, <span
+class="math inline">\(C_1\)</span>, and <span
+class="math inline">\(C_2\)</span> of a sphere over a metal ground plane
+at various heights using the Xu method and the formalism developed in
+the above notes. The resulting code is much more compact and readable
+than previously developed code in <code>capacitancefinite.py</code>. The
+calculated capacitance and capacitance derivatives show excellent
+agreement with analytical series, except for <span
+class="math inline">\(C_2\)</span> at large tip-sample separation. I
+suspect the problem is that the reference distance of 1 nm is too small,
+leading to roundoff error. Examine this hypothesis in a subsequent
+notebook.</p></li>
+<li><p><strong>Study 47</strong> (<a
+href="dissipation-theory--Study-47.html">html</a>). Develop code for a
+point probe of finite size (continued). In the previous notebook I
+computed the capacitance (and associated derivatives) <span
+class="math inline">\(C_0\)</span>, <span
+class="math inline">\(C_1\)</span>, and <span
+class="math inline">\(C_2\)</span> of a sphere over a metal ground plane
+at various heights using the Xu method. The calculated capacitance and
+capacitance derivatives showed excellent agreement with analytical
+series, except for <span class="math inline">\(C_2\)</span> at large
+tip-sample separation. I suspected the problem was that the reference
+distance of 1 nm was too small, leading to roundoff error. Below I show
+that unless the reference height <span
+class="math inline">\(z_{\mathrm{r}}\)</span> is on the order of the
+height <span class="math inline">\(h\)</span>, the integral <span
+class="math inline">\(K_2(\omega=0, r_1 = [0, 0, h], r_2 = [0, 0,
+h])\)</span> will blow up. I believe this finding explains the observed
+error in <span class="math inline">\(C_2\)</span> are large <span
+class="math inline">\(h\)</span>.</p></li>
+<li><p><strong>Study 48</strong> (<a
+href="dissipation-theory--Study-48.html">html</a>). Develop code for a
+point probe of finite size (continued). Recode the functions in Study 46
+(<a href="dissipation-theory--Study-46.html">html</a>) to scale
+coordinates by the reference distance <span
+class="math inline">\(z_{\mathrm{r}}\)</span> stored in the sample
+object. For a spherical tip with radius <span class="math inline">\(r =
+30\)</span> nm represented by <span class="math inline">\(N =
+15\)</span> image charges, we compute <span
+class="math inline">\(C_0\)</span>, <span
+class="math inline">\(C_1\)</span>, and <span
+class="math inline">\(C_2\)</span> for tip-sample separations spaced
+logarithmically between <span class="math inline">\(h = r/2 =
+15\)</span> nm and <span class="math inline">\(1 \mu\)</span>m. We
+perform this computation for two semi-infinite samples, a “metallic”
+sample and a “dielectric” sample having relative dielectric constant 3.
+For these two idealized samples, we compare the computed <span
+class="math inline">\(C_{j}\)</span>’s to an analytical series solution
+approximated by 20 terms. With <span
+class="math inline">\(z_{\mathrm{r}} = 0.1\)</span> nm, the agreement is
+poor. With <span class="math inline">\(z_{\mathrm{r}} \geq 10\)</span>
+nm, the error is only 5 parts per million at <span
+class="math inline">\(h = 15\)</span> nm, decreasing to just few parts
+per billion at <span class="math inline">\(h = 1 \mu\)</span>m. This
+study demonstrates that choosing <span
+class="math inline">\(z_{\mathrm{r}}\)</span> appropriately can
+dramatically improve the accuracy of the computed capacitance
+derivatives, particularly the second derivative <span
+class="math inline">\(C_2\)</span>.</p></li>
+<li><p><strong>Study 49</strong> (<a
+href="dissipation-theory--Study-49.html">html</a>). Develop code for a
+point probe of finite size (continued). I have incorporated into
+<code>dissipationtheory8c.py</code> the code from Study 48 (<a
+href="dissipation-theory--Study-46.html">html</a>) determining the
+images charges for a spherical tip. Below I develop code for (a)
+computing observables like force, friction, and frequency shift and (b)
+determining the image charges for a sphere-plus-cone tip. In contrast
+with prior code, read the tip radius, cone angle, and cone length from
+the cantilever object.</p></li>
+<li><p><strong>Study 50</strong> (<a
+href="dissipation-theory--Study-50.html">html</a>). Run finite-tip
+simulations. Test drive the code in <code>dissipationtheory8c.py</code>,
+comparing the frequency shift measured over gold to that computed using
+(1) a sphere and (2) a sphere-plus-cone, both over a Type I “metallic”
+sample. Both models predict the size of the frequency shift at small
+tip-sample separation <span class="math inline">\(h\)</span> with a
+reasonable tipe radius and essentially no other free parameters. Model 2
+does a better job than Model 1 at predicting the frequency shift at
+large <span class="math inline">\(h\)</span>. These computations are
+painfully slow. This is because I am modeling the gold substrate as a
+Type I sample, essentially a high-conductivity semiconductor, and the
+associated response function is very complicated and slow to integrate.
+In Study 37 I implimented a sphere-plus-cone frequency shift calculation
+using a metal response function, which is much faster to compute. The
+Study 37 calculation was fast enough to enable least-squares fitting of
+the data to obtain a tip radius and cone angle (this took about a
+minute). Below I perform code profiling, brainstorm ways to speed up
+data analysis, and explore vector integration.</p></li>
 </ul>
 </body>
 </html>
