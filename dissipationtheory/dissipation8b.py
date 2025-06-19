@@ -224,7 +224,8 @@ def mycsch_jit(x):
 
 @jit(float64(float64,
              float64,
-             SampleModel1Jit.class_type.instance_type,float64,
+             SampleModel1Jit.class_type.instance_type,
+             float64,
              nb_types.float64[::1],
              nb_types.float64[::1],
              boolean), nopython=True)
@@ -240,17 +241,17 @@ def integrand1jit(y, power, sample, omega, location1, location2, isImag):
     hs = sample.h_s
 
     Omega = omega/sample.omega0
-    theta1 = complex(1,0) * np.sqrt(y**2 * (hs / zr)**2 + (hs * sample.kD)**2 * (1/es + complex(0,1) * Omega))
-    theta2 = complex(1,0) * y * hs / zr
+    theta1 = complex(1,0) * np.sqrt(y**2 * (hs / zr)**2 + (hs * sample.kD)**2 * (1/es + complex(0,1) * Omega))  # depends on y
+    theta2 = complex(1,0) * y * hs / zr                                                                         # depends on y
 
-    k_over_eta = y / np.sqrt(y**2 + (zr * sample.kD)**2 * (1/es + complex(0,1) * Omega))
+    k_over_eta = y / np.sqrt(y**2 + (zr * sample.kD)**2 * (1/es + complex(0,1) * Omega)) # depends on y
 
     p0 = 1 + complex(0,1) * es * Omega
-    p1 = k_over_eta / (es * p0)
+    p1 = k_over_eta / (es * p0)                           # depends on y
     p2 = - Omega**2 / (p0 * p0)
     p3 = complex(0,1) * Omega / (ed * p0)
-    p4 = complex(0,1) * Omega * k_over_eta / (es * p0**2)
-    p5 = - k_over_eta**2 / (es**2 * p0**2)
+    p4 = complex(0,1) * Omega * k_over_eta / (es * p0**2) # depends on y
+    p5 = - k_over_eta**2 / (es**2 * p0**2)                # depends on y
     p6 = complex(0,1) * Omega / p0
     p7 = 1 / ed
 
@@ -292,12 +293,12 @@ def integrand2jit(y, power, sample, omega, location1, location2, isImag):
     zr = sample.z_r
 
     Omega = omega/sample.omega0
-    theta2 = complex(1,0) * y * sample.h_d / zr
+    theta2 = complex(1,0) * y * sample.h_d / zr # depends on y
 
-    k_over_eta = y / np.sqrt(y**2 + (zr * sample.kD)**2 * (1/es + complex(0,1) * Omega))
+    k_over_eta = y / np.sqrt(y**2 + (zr * sample.kD)**2 * (1/es + complex(0,1) * Omega)) # depends on y
 
     p0 = 1 + complex(0,1) * es * Omega
-    p1 = k_over_eta / (es * p0)
+    p1 = k_over_eta / (es * p0)         # depends on y
     p6 = complex(0,1) * Omega / p0
     p7 = 1 / sample.epsilon_d
 
