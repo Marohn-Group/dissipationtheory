@@ -1,5 +1,7 @@
 # python -m unittest -v test_dissipation9a.py
 # python -m unittest -v tests/test_dissipation9a.py
+#
+# Ran 9 tests in 22.310s
 
 import unittest
 import numpy as np
@@ -12,6 +14,11 @@ def metalwrapper(x):
     return np.array([x[0].real, x[0].imag, x[1].real, x[1].imag, x[2].real, x[0].imag])
 
 class TestDissipation9aMethods(unittest.TestCase):
+    """Test that similar K values are obtained when sample parameters are pushed to limiting cases.
+    
+    For example, a Type III sample with hd -> 0 should behave like a Type III sample.
+    """
+
 
     def setUp(self):
 

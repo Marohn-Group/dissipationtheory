@@ -14,6 +14,7 @@ from numba import float64, complex128, boolean, uint16
 from numba.experimental import jitclass
 from numba import deferred_type
 
+
 CantileverModelSpec = [
     ('f_c', float64),
     ('k_c', float64),
@@ -174,6 +175,7 @@ class SampleModel2Jit(object):
         print("    inverse Debye length = ", self.kD, "m^{{-1}}")
         print("            Debye length = ", 1/self.kD, "m")
 
+
 SampleModel3Spec = [
     ('cantilever', CantileverModelJit_type),
     ('epsilon_s',complex128),
@@ -223,8 +225,47 @@ class SampleModel3Jit(object):
         print("    inverse Debye length = ", self.kD, "m^{{-1}}")
         print("            Debye length = ", 1/self.kD, "m")        
 
-# To compile the integrand1_jit(), integrand2_jit(), and integrand3_jit() functions,
-# jit needs an actual instance of the function input "sample". 
+
+SampleModel4Spec = [
+    ('cantilever', CantileverModelJit_type),
+    ('z_r',float64),
+    ('type',uint16)]
+
+@jitclass(SampleModel4Spec)
+class SampleModel4Jit(object):
+    """Model IV sample object::
+    
+        cantilever | vacuum gap | metal
+    
+    The metal substrate is semi-infinite.
+    
+    :param CantileverModel cantilever: an object storing the cantilever properties
+    :param ureg.Quantity z_r: reference height [m] (used in computations)
+
+    """
+
+    def __init__(self, cantilever, z_r):
+
+        self.cantilever = cantilever
+        self.z_r = z_r
+        self.type = 4
+
+    def print(self):
+
+        print("cantilever")
+        print("==========")
+        self.cantilever.print()
+        print("")
+        print("sample type = ", self.type)
+        print("")
+        print("metal")
+        print("=====")
+        print("thickness = infinite")
+
+
+# To compile the integrand1_jit(), integrand2_jit(), integrand3_jit(), and 
+# integrand3_jit() functions, jit needs an actual instance of the function
+# input "sample". 
 
 sample1 = SampleModel1Jit(
     cantilever=CantileverModelJit(75.0e3, 2.8, 1.0, 35.0E-9, 20.0, 1000.0E-9),
@@ -250,6 +291,11 @@ sample3 = SampleModel3Jit(
     sigma = 1e-8,
     rho=1e21,
     z_r=300E-9)
+
+sample4 = SampleModel4Jit(
+    cantilever=CantileverModelJit(75.0e3, 2.8, 1.0, 35.0E-9, 20.0, 1000.0E-9),
+    z_r=100E-9)
+
 
 @jit(complex128(complex128), nopython=True)
 def mysech_jit(x):
@@ -283,15 +329,13 @@ def mycsch_jit(x):
 # the numba-scipy package is required. See README.md for the (painful) upgrade procedure.
 # I ended up having to reinstall poetry!
 
-@jit(float64(float64,
-             float64,
+@jit(float64[:](float64,
              SampleModel1Jit.class_type.instance_type,
              float64,
-             nb_types.float64[::1],
-             nb_types.float64[::1],
-             boolean), nopython=True)
+             float64[:],
+             float64[:]), nopython=True)
 
-def integrand1jit(y, power, sample, omega, location1, location2, isImag):
+def integrand1jit(y, sample, omega, location1, location2):
     """Theta function for the Sample I geometry of Lekkala.
     
     In the code below, `y` is the unitless integration variable."""
@@ -330,22 +374,20 @@ def integrand1jit(y, power, sample, omega, location1, location2, isImag):
     argument = y * np.sqrt(rhoX**2 + rhoY**2)
     exponent = y * (location1[2] + location2[2])/ zr
 
-    if isImag:
-        integrand = y**power * scipy.special.j0(argument) * np.exp(-1 * exponent) * np.imag(rp) 
-    else:
-        integrand = y**power * scipy.special.j0(argument) * np.exp(-1 * exponent) * np.real(rp) 
+    integrand = np.array([       np.real(rp),        np.imag(rp), 
+                          y    * np.real(rp), y    * np.imag(rp),
+                          y**2 * np.real(rp), y**2 * np.imag(rp)]) * scipy.special.j0(argument) * np.exp(-1 * exponent)
 
     return integrand
 
-@jit(float64(float64,
-             float64,
+@jit(float64[:](float64,
              SampleModel2Jit.class_type.instance_type,
              float64,
-             nb_types.float64[::1],
-             nb_types.float64[::1],
-             boolean), nopython=True)
+             float64[:],
+             float64[:]), nopython=True)
 
-def integrand2jit(y, power, sample, omega, location1, location2, isImag):
+def integrand2jit(y, sample, omega, location1, location2):
+
     """Theta function for the Sample II geometry of Lekkala.
     
     In the code below, `y` is the unitless integration variable."""
@@ -371,78 +413,120 @@ def integrand2jit(y, power, sample, omega, location1, location2, isImag):
     argument = y * np.sqrt(rhoX**2 + rhoY**2)
     exponent = y * (location1[2] + location2[2])/ zr
 
-    if isImag:
-        integrand = y**power * scipy.special.j0(argument) * np.exp(-1 * exponent) * np.imag(rp) 
-    else:
-        integrand = y**power * scipy.special.j0(argument) * np.exp(-1 * exponent) * np.real(rp) 
+    integrand = np.array([       np.real(rp),        np.imag(rp), 
+                          y    * np.real(rp), y    * np.imag(rp),
+                          y**2 * np.real(rp), y**2 * np.imag(rp)]) * scipy.special.j0(argument) * np.exp(-1 * exponent)
 
     return integrand
 
-# Can't jit this because it outputs an answer with units
+@jit(float64[:](float64,
+             SampleModel3Jit.class_type.instance_type,
+             float64,
+             float64[:],
+             float64[:]), nopython=True)
 
-def K_jit(integrand, power, sample, omega, location1, location2, isImag):
-    """Compute the integral :math:`K`.  The answer is returned with units. """
+def integrand3jit(y, sample, omega, location1, location2):
+    """Theta function for a Sample III object, a semi-infinite dielectric.
     
-    prefactor = 1/np.power(ureg.Quantity(sample.z_r, 'm'), power+1)
+    In the code below, `y` is the unitless integration variable."""
 
-    if isImag:
-        integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location1, location2, True))[0]
-    else:
-        integral = integrate.quad(integrand, 0., np.inf, args=(power, sample, omega, location1, location2, False))[0]
-  
-    return (prefactor * integral).to_base_units()
+    es = sample.epsilon_s
+    zr = sample.z_r
 
-def gamma_perpendicular_jit(integrand, sample, location):
-    """Compute the friction for a cantilever oscillating in the perpendicular 
-    geometry using equation 33 in Roger Loring's 2025-06-05 document."""
+    Omega = omega/sample.omega0
+    k_over_eta = y / np.sqrt(y**2 + (zr * sample.kD)**2 * (1/es + complex(0,1) * Omega)) # depends on y
 
-    # Shorthand
+    p0 = 1 + complex(0,1) * es * Omega
+    p1 = k_over_eta / (es * p0)          # depends on y
+    p6 = complex(0,1) * Omega / p0
 
-    wc = sample.cantilever.omega_c
+    theta_norm = p6 + p1
+    rp = (1 - theta_norm) / (1 + theta_norm)
 
-    # The parameters sample_jit object lacks units, so add them back in manually
+    rhoX = (location1[0] - location2[0])/ zr
+    rhoY = (location1[1] - location2[1])/ zr
+    argument = y * np.sqrt(rhoX**2 + rhoY**2)
+    exponent = y * (location1[2] + location2[2])/ zr
 
-    R = ureg.Quantity(sample.cantilever.R, 'm')
-    V = ureg.Quantity(sample.cantilever.V_ts, 'V')
-    omega_c = ureg.Quantity(wc, 'Hz')
+    integrand = np.array([       np.real(rp),        np.imag(rp), 
+                          y    * np.real(rp), y    * np.imag(rp),
+                          y**2 * np.real(rp), y**2 * np.imag(rp)]) * scipy.special.j0(argument) * np.exp(-1 * exponent)
 
-    # Main formula
+    return integrand
 
-    q0 = 4 * np.pi * epsilon0 * R * V
+# For now, just a copy of the dissipation9a.py function
+# Maps the 6-component vector of real numbers with components
+# 
+#   Re[K0], Im[K0], Re[K1], Im[K1], Re[K2], Im[K2]
+#
+# to the the 3-component complex vector with components
+#
+#   Re[K0] + i Im[K0], Re[K1] + i Im[K1], Re[K2] + i Im[K2]
 
-    prefactor = -q0**2 / (8 * np.pi * epsilon0 * omega_c)
-    gamma = prefactor * K_jit(integrand, 2, sample, wc, location, location, True)
+Kp = np.array([[complex(1,0), 0, 0],
+               [complex(0,1), 0, 0],
+               [0, complex(1,0), 0],
+               [0, complex(0,1), 0],
+               [0, 0, complex(1,0)],
+               [0, 0, complex(0,1)]])
 
-    # Return a frequency shift with units
-
-    return gamma.to('pN s/m')
-
-def freq_perpendicular_jit(integrand, sample, location):
-    """Compute the frequency shift for a cantilever oscillating in the perpendicular 
-    geometry using equations 30 and 31 in Roger Loring's 2025-06-05 document."""
-
-    # Shorthand
-
-    fc = sample.cantilever.f_c
-    wc = sample.cantilever.omega_c
-    kc = sample.cantilever.k_c
-
-    # The parameters sample_jit object lacks units, so add them back in manually
-
-    R = ureg.Quantity(sample.cantilever.R, 'm')
-    V = ureg.Quantity(sample.cantilever.V_ts, 'V')
-    f_c = ureg.Quantity(fc, 'Hz')
-    k_c = ureg.Quantity(kc, 'N/m')
-
-    # Main formulas
-
-    q0 = 4 * np.pi * epsilon0 * R * V
-
-    prefactor1 = -(f_c * q0**2) / (4 * np.pi * epsilon0 * k_c)
-    prefactor2 = -(f_c * q0**2) / (16 * np.pi * epsilon0 * k_c)
-
-    df1 = prefactor1 * K_jit(integrand, 2, sample, 0, location, location, False)
-    df2 = prefactor2 * (K_jit(integrand, 2, sample, wc, location, location, False)
-                      - K_jit(integrand, 2, sample, 0, location, location, False))
+# For now, just a copy of the dissipation9a.py function
+def K_jit(integrand, sample, omega, location1, location2):
+    """Compute the integrals :math:`K_0, K_1, K_2`, unscaled by $z_{\mathrm{r}}$, without units."""
     
-    return pint.Quantity.from_list([df1, df2]).to('Hz')
+    integrals = integrate.quad_vec(integrand, 0., np.inf, args=(sample, omega, location1, location2))[0]
+    return integrals @ Kp
+
+# For now, just a copy of the dissipation9a.py function
+def Kunits_jit(integrand, sample, omega, location1, location2):
+    """Compute the integrals :math:`K_0, K_1, K_2`, scaled by $z_{\mathrm{r}}$, with units."""
+
+    integrals = integrate.quad_vec(integrand, 0., np.inf, args=(sample, omega, location1, location2))[0]
+    K0, K1, K2 = integrals @ Kp
+
+    zr_u = ureg.Quantity(sample.z_r, 'm')
+
+    K0u = K0 / np.power(zr_u, 1)
+    K1u = K1 / np.power(zr_u, 2)
+    K2u = K2 / np.power(zr_u, 3)
+
+    return K0u.to('1/nm**1'), K1u.to('1/nm**2'), K2u.to('1/nm**3')
+
+@jit(nb_types.UniTuple(complex128,3)(SampleModel4Jit.class_type.instance_type,
+             float64[:],
+             float64[:]), nopython=True)
+
+def Kmetal_jit(sample, location1, location2):
+    """The Green's function for a metal, the unitless image potential and derivatives."""
+
+    # shorthand
+    s = location1/sample.z_r
+    r = location2/sample.z_r
+    
+    # location of image charge
+    ri = r.copy()
+    ri[2] = -1 * ri[2]
+
+    # shorthand
+    Rinv = np.power((s-ri).T @ (s-ri), -1/2)
+    
+    G0 = complex(-1,0) * Rinv
+    G1 = complex( 2,0) * (s[2] + r[2]) *  np.power(Rinv, 3)
+    G2 = complex( 4,0) * (np.power(Rinv, 3) - 3 * np.power(s[2] + r[2], 2) * np.power(Rinv, 5))
+    
+    K0, K1, K2 = -G0, G1/2, -G2/4
+
+    return K0, K1, K2
+
+# I cannot figure out how to get a `@jit` compiled function to return 
+# a `ureg.Quantity` object, so I do not know how to write an analogous 
+# `Kmetalunits_jit` function. The function below calls the compiled
+# function Kmetal_jit and then adds on units afterwards.
+
+def Kmetalunits_jit(sample, location1, location2):
+
+    K0, K1, K2 = Kmetal_jit(sample, location1, location2)
+    zr_u = ureg.Quantity(sample.z_r, 'm')
+    K0u, K1u, K2u = K0/zr_u**1, K1/zr_u**2, K2/zr_u**3
+
+    return K0u.to('1/nm**1'), K1u.to('1/nm**2'), K2u.to('1/nm**3')

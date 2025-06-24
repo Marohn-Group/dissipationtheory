@@ -410,6 +410,18 @@ class SampleModel4(object):
 
         return str
 
+    def args(self):
+        """A dictionary with the sample parameters, useful for initializing 
+        a jit version of the sample object."""
+
+        cantilever_jit = CantileverModelJit(**self.cantilever.args())
+
+        args = {
+            'cantilever': cantilever_jit,
+            'z_r': self.z_r.to('m').magnitude
+        }
+
+        return args
 
 def mysech(x):
     """Define my own ``sech()`` function to avoid overflow problems."""
@@ -565,7 +577,7 @@ Kp = np.array([[complex(1,0), 0, 0],
                [0, 0, complex(0,1)]])
 
 def K(integrand, sample, omega, location1, location2):
-    """Compute the integrals :math:`K_0, K_1, K_2`, unscaled by $z_{\mathrm{r}}$, without units."""
+    """Compute the integrals :math:`K_0, K_1, K_2` as complex numbers, unscaled by $z_{\mathrm{r}}$, without units."""
 
     integrals = integrate.quad_vec(integrand, 0., np.inf, args=(sample, omega, location1, location2))[0]
     return integrals @ Kp
