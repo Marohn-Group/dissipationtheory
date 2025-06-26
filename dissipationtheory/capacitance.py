@@ -33,7 +33,7 @@ def Csphere(index, height, radius, nterm=20):
         * CsphereTerm[index](H, radius, n).sum(axis=1).to_base_units()
     )
 
-def iCsphereOverSem(index, height, radius, epsilon, nterm=20):
+def CsphereOverSemi(index, height, radius, epsilon, nterm=20):
     """Capacitance (and derivatives) of a sphere above a dielectric substrate.
 
     :param integer index: 0 for capacitance, 1 for 1st derivative, 2 for 2nd derivative

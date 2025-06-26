@@ -22,7 +22,7 @@ def stripKunits(Kn_tuple):
 class TestDissipation9bMethods(unittest.TestCase):
     """Verify that compiled code returns the same $K_0$, $K_1$, and $K_2$ values as pure Python code.
     
-    Specifially, confirm that the functions K_jit, Kunits_jit, Kmetal_jit, and Kmetal_jit return the same
+    Specifically, confirm that the functions K_jit, Kunits_jit, Kmetal_jit, and Kmetal_jit return the same
     $K_n$ values as K_jit, Kunits_jit, Kmetal_jit, Kmetal_jit for Type I, II, III, and IV samples.
     This amounts to a total of eight unit tests.
     """
