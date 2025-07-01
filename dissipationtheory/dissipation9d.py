@@ -6,7 +6,6 @@ import numpy as np
 import matplotlib.pylab as plt
 
 from dissipationtheory.constants import ureg, epsilon0, qe
-from dissipationtheory.dissipation8b import K_jit
 
 class twodimCobject():
 
@@ -17,7 +16,7 @@ class twodimCobject():
         self.sample = sample
 
         self.Vr = ureg.Quantity(1, 'V')
-        self.zr = ureg.Quantity(sample.z_r, 'm')
+        self.zr = ureg.Quantity(1, 'nm')
         
     @property
     def cG(self):
@@ -38,9 +37,6 @@ class twodimCobject():
         (a) self.rk, the voltage-test points, and (b) self.rj, the image-charge
         points, with the coordinates in nanometers. 
         """
-
-        # rewrite
-        self.zr = h.to('m')
 
         # read from sample.cantilever object
         r = ureg.Quantity(self.sample.cantilever.R, 'm').to('nm').magnitude
