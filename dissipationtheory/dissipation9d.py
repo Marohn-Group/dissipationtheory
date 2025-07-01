@@ -34,7 +34,7 @@ class twodimCobject():
         points are located uniformly around the sphere, starting at the south 
         pole, $\theta = -\pi/2$, and rotating counter clockwise. Initialize the
         values of the image charges at 1.0.  Creates two arrays: 
-        (a) self.rk, the voltage-test points, and (b) self.rj, the image-charge
+        (a) self.sj, the voltage-test points, and (b) self.rk, the image-charge
         points, with the coordinates in nanometers. 
         """
 
@@ -46,11 +46,11 @@ class twodimCobject():
         
         # charge locations
         delta_array = np.linspace(start=-0.90, stop=0.90, endpoint=True, num=N)
-        self.rj = np.array([[0, 0, h + r + r * delta] for  delta in delta_array])
+        self.rk = np.array([[0, 0, h + r + r * delta] for  delta in delta_array])
 
         # voltage-test locations
         theta_array = np.linspace(start=theta_start, stop=theta_stop, endpoint=theta_endpoint, num=M)
-        self.rk = np.array([[r * np.cos(theta), 0, h + r + r * np.sin(theta)] for theta in theta_array])
+        self.sj = np.array([[r * np.cos(theta), 0, h + r + r * np.sin(theta)] for theta in theta_array])
         
         # save these
         self.info = {'type': 'sphere', 
@@ -103,28 +103,28 @@ class twodimCobject():
         Nc = int(np.floor(np.sqrt((L - r) / dz)))
         Nz = Nt + Nc
         
-        rj = np.zeros((Nz, 3))
-        rj[0,:] = np.array([0, 0, np.sqrt(2 * r * h + h**2)])
-        rj[1,:] = np.array([0, 0, h + r - dz])
-        rj[2,:] = np.array([0, 0, h + r])
+        rk = np.zeros((Nz, 3))
+        rk[0,:] = np.array([0, 0, np.sqrt(2 * r * h + h**2)])
+        rk[1,:] = np.array([0, 0, h + r - dz])
+        rk[2,:] = np.array([0, 0, h + r])
         for k in np.arange(3, Nz):
-            rj[k,0] = 0
-            rj[k,1] = 0
-            rj[k,2] = rj[k-1,2] + dz * (2 * k - 5)
+            rk[k,0] = 0
+            rk[k,1] = 0
+            rk[k,2] = rk[k-1,2] + dz * (2 * k - 5)
         
-        self.rj = rj
+        self.rk = rk
 
         Nr = Nz
-        rk = np.zeros((Nr, 3))
-        rk[0,:] = np.array([0, 0, h])
-        rk[1,:] = np.array([r * np.sin((np.pi/2 - thetar)/2), 0, h + r * (1 - np.cos((np.pi/2 - thetar)/2))])
-        rk[2,:] = np.array([r * np.cos(thetar), 0, h + r * (1 - np.sin(thetar))])
+        sj = np.zeros((Nr, 3))
+        sj[0,:] = np.array([0, 0, h])
+        sj[1,:] = np.array([r * np.sin((np.pi/2 - thetar)/2), 0, h + r * (1 - np.cos((np.pi/2 - thetar)/2))])
+        sj[2,:] = np.array([r * np.cos(thetar), 0, h + r * (1 - np.sin(thetar))])
         for k in np.arange(3, Nz):
-            rk[k,2] = (rj[k,2] + rj[k-1,2])/2
-            rk[k,1] = 0
-            rk[k,0] = r * np.cos(thetar) + (rk[k,2] - d2) * np.tan(thetar)
+            sj[k,2] = (rk[k,2] + rk[k-1,2])/2
+            sj[k,1] = 0
+            sj[k,0] = r * np.cos(thetar) + (sj[k,2] - d2) * np.tan(thetar)
 
-        self.rk = rk
+        self.sj = sj
         
         # save these
         self.info = {'type': 'sphere-tipped cone', 
@@ -165,17 +165,17 @@ class twodimCobject():
         fig.suptitle(self.title1 + '\n' + self.title2, fontsize=10)
     
         cmap = plt.get_cmap('RdBu')
-        ax1.scatter(self.rj[0:N,0], self.rj[0:N,2], 
+        ax1.scatter(self.rk[0:N,0], self.rk[0:N,2], 
             marker='.', c=self.results['q'][0:N], cmap=cmap, 
             alpha=0.5, edgecolors='face',
             vmin=-max(abs(self.results['q'][0:N])), 
             vmax=max(abs(self.results['q'][0:N])))
-        ax1.scatter(self.rk[0:M,0], self.rk[0:M,2], marker='.')
+        ax1.scatter(self.sj[0:M,0], self.sj[0:M,2], marker='.')
         ax1.set_xlabel('$x$ [nm]')
         ax1.set_ylabel('$z$ [nm]')
         ax1.axis('equal')
 
-        ax2.plot(self.rj[0:N,2], self.results['q'][0:N], '.-')
+        ax2.plot(self.rk[0:N,2], self.results['q'][0:N], '.-')
         ax2.set_xlabel('$(r_j)_{z}$ [nm]')
         ax2.set_ylabel('$q/q_{e}$')
         ax2.set_title(r''.format(), fontsize=10)
