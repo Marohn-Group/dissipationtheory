@@ -1,7 +1,12 @@
 # Author: John A. Marohn
+#
 # Date: 2025-06-25
 # Summary: Rewrite functions in dissipation9b.py for incorporation into fast, compiled matrix-generating functions
-#  See the exploratory code in dissipation-theory--Study-53.ipynb and dissipation-theory--Study-54.ipynb,
+# See the exploratory code in dissipation-theory--Study-53.ipynb and dissipation-theory--Study-54.ipynb,
+#
+# Date: 2025-07-01
+# Summary: Most of code in this file will be superceded by the code in dissipation9c.py, developed in 
+# dissipation-theory--Study-58.ipynb
 
 import numpy as np
 from numba import jit, njit, prange
