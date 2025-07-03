@@ -1,17 +1,142 @@
 # dissipationtheory9d.py
 # John A. Marohn (jam99@cornell.edu)
-# Created 2025-06-18
+# Created 2025-07-03
+#
+# Code from dissipation-theory--Study-58.ipynb
 
 import numpy as np
+from numba import jit
+import scipy
 import matplotlib.pylab as plt
-
+import pandas as pd
 from dissipationtheory.constants import ureg, epsilon0, qe
+
+@jit(nopython=True)
+def Cmatrix_jit(sj, rk):
+    """The unitless Coulomb potential Green's function matrix."""    
+
+    result = np.zeros((len(sj),len(rk)))
+    for j, sje in enumerate(sj):
+        for k, rke in enumerate(rk):
+            result[j,k] = 1 / np.linalg.norm(sje - rke)
+    return result
+
+@jit(nopython=True)
+def rpIII_jit(y, omega, omega0, zr, kD, es):
+    """Fresnel coefficient for Sample III object, a semi-infinite semiconductor.
+    
+    In the code below, `y` is the unitless integration variable.
+    """
+
+    Omega = omega/omega0
+    k_over_eta = y / np.sqrt(y**2 + (zr * 1e-9 * kD)**2 * (1/es + complex(0,1) * Omega))
+
+    p0 = 1 + complex(0,1) * es * Omega
+    p1 = k_over_eta / (es * p0)
+    p6 = complex(0,1) * Omega / p0
+
+    theta_norm = p6 + p1
+    rp = (1 - theta_norm) / (1 + theta_norm)
+ 
+    return rp
+
+@jit(nopython=True)
+def KmatrixIII_jit(omega, omega0, kD, es, sj, rk, j0s, an):
+    """The unitless response-function matrices for a Type III semiconductor sample."""
+
+    y_min = 1.0e-7
+    y_max = 20.0
+    N = len(an) - 1
+    
+    K0 = np.zeros((len(sj),len(rk)), dtype=np.complex128)
+    K1 = np.zeros((len(sj),len(rk)), dtype=np.complex128)
+    K2 = np.zeros((len(sj),len(rk)), dtype=np.complex128)
+
+    # Loop over image-charge points
+    
+    for k, rke in enumerate(rk):    
+
+        # Loop over voltage-test points
+        
+        for j, sje in enumerate(sj):
+
+            zjkref = sje[2] + rke[2]
+            x = np.sqrt((sje[0] - rke[0])**2 + (sje[1] - rke[1])**2) / zjkref
+
+            # Determine breakpoints
+            
+            mask = j0s/(x + 1.0e-6) < y_max
+            yb = np.hstack(
+                (np.array([y_min]),
+                 j0s[mask] / x,
+                 np.array([y_max])))
+            
+            result0 = np.zeros(len(yb)-1, dtype=np.complex128)
+            result1 = np.zeros(len(yb)-1, dtype=np.complex128)
+            result2 = np.zeros(len(yb)-1, dtype=np.complex128)
+
+            # Loop over subintervals
+            
+            for index in np.arange(len(yb)-1):
+                
+                y_vector = np.linspace(yb[index], yb[index+1], N+1)
+                dy = (yb[index+1] - yb[index])/N
+            
+                integral0 = np.zeros_like(y_vector, dtype=np.complex128)
+                integral1 = np.zeros_like(y_vector, dtype=np.complex128)
+                integral2 = np.zeros_like(y_vector, dtype=np.complex128)
+
+                # Loop over y-axis points in the subinterval
+                
+                for m, y in enumerate(y_vector):
+
+                    rp = rpIII_jit(y, omega, omega0, zjkref, kD, es)
+                    
+                    integral0[m] = np.exp(-y) * scipy.special.j0(y * x) * rp
+                    integral1[m] = y * integral0[m]
+                    integral2[m] = y * integral1[m]
+
+                # Sum with Newton-Cotes weights
+                
+                result0[index] = dy * (an * integral0).sum()  
+                result1[index] = dy * (an * integral1).sum()
+                result2[index] = dy * (an * integral2).sum()
+
+            K0[j,k] = result0.sum() / zjkref**1
+            K1[j,k] = result1.sum() / zjkref**2
+            K2[j,k] = result2.sum() / zjkref**3
+            
+    return K0, K1, K2
+
+@jit(nopython=True)
+def KmatrixIV_jit(sj, rk):
+    """The unitless Green's function matrices for an image charge."""
+
+    K0 = complex(1,0) * np.zeros((len(sj),len(rk)))
+    K1 = complex(1,0) * np.zeros((len(sj),len(rk)))
+    K2 = complex(1,0) * np.zeros((len(sj),len(rk)))
+
+    for k, rke in enumerate(rk):
+        
+        # location of image charge
+        rkei = rke.copy()
+        rkei[2] = -1 * rkei[2]
+        
+        for j, sje in enumerate(sj):
+            
+            # shorthand
+            Rinv = np.power((sje - rkei).T @ (sje - rkei), -1/2)
+            
+            K0[j,k] = complex( 1,0) * Rinv
+            K1[j,k] = complex( 1,0) * (sje[2] + rke[2]) *  np.power(Rinv, 3)
+            K2[j,k] = complex(-1,0) * (np.power(Rinv, 3) - 3 * np.power(sje[2] + rke[2], 2) * np.power(Rinv, 5))
+            
+    return K0, K1, K2
 
 class twodimCobject():
 
     def __init__(self, sample):
-        """Here sample is a SampleModel1Jit, SampleModel2Jit, 
-        SampleModel3Jit, or SampleModel4Jit object."""
+        """Here sample is a SampleModel3Jit or SampleModel4Jit object."""
 
         self.sample = sample
 
@@ -81,10 +206,7 @@ class twodimCobject():
         with Semiconductor Samples. *AIP Advances* 2019, 9(10): 105308, 
         https://doi.org/10.1063/1.5110482."""
         
-        # write h to sample.cantilever.object
-        # jam99 -- this doesn't exist anymore
-        # self.sample.cantilever.d = h.to('m').magnitude
-
+ 
         # convert h to nm and strip units
         h = h.to('nm').magnitude
         
@@ -146,8 +268,74 @@ class twodimCobject():
             'S': np.ones(Nz),
             'Sinv': np.ones(Nz),
             'cn': 0, 
-            'V': np.zeros(Nr)} 
+            'V': np.zeros(Nr)}
 
+    def solve(self, omega, alpha=0.):
+        """Solve for the charges.  The parameter $\alpha$ is used to filter
+        the singular values in the inverse.  The parameter omega is the unitless
+        cantilever frequency in rad/s.       
+        """
+
+        C = Cmatrix_jit(self.sj, self.rk)
+
+        if self.sample.type == 4:
+            
+            K0, K1, K2 = KmatrixIV_jit(self.sj, self.rk)
+            
+        elif self.sample.type == 3:
+
+            j0s = scipy.special.jn_zeros(0,100.)
+            an, _ = scipy.integrate.newton_cotes(20, 1)
+            
+            args = {'omega': omega, 
+                'omega0': self.sample.omega0,
+                'kD': self.sample.kD, 
+                'es': self.sample.epsilon_s, 
+                'sj': self.sj, 
+                'rk': self.rk, 
+                'j0s': j0s, 
+                'an': an}
+        
+            K0, K1, K2 = KmatrixIII_jit(**args)
+            
+        else:
+
+            raise Exception("unknown sample type")
+               
+        G0 = C - K0
+        
+        U, S, VT = np.linalg.svd(G0, full_matrices=False)
+        filt = np.diag(np.power(S, 2)/(np.power(S, 2) + alpha**2))
+        Sinv = filt * np.diag(np.power(S, -1))
+        G0inv = VT.T @ Sinv @ U.T
+
+        self.results['S'] = S                      # unitless
+        self.results['Sinv'] = np.diagonal(Sinv)   # unitless
+        self.results['cn'] = S.max()/S.min()       # unitless
+        
+        IdN = np.ones(self.info['N']).T
+        IdM = np.ones(self.info['M'])
+
+        Q = self.cGinv * complex(0,1) * G0inv @ IdM
+        V = -1 * complex(0,1) * self.cG * G0 @ Q
+  
+        self.results['q'] = np.imag(Q) # units of qe 
+        self.results['V'] = np.real(V) # units of Vr
+
+        Vrms = np.std(V - np.ones_like(V))
+        
+        self.results['Vrms [ppm]'] = 1e6 * np.real(Vrms) # units of Vr
+        
+        L0 = IdN @ G0inv @ IdM
+        L1 = -2 * IdN @ G0inv @ K1 @ G0inv @ IdM
+        L2 = 4 * IdN @ (G0inv @ K2 @ G0inv + 2 * G0inv @ K1 @ G0inv @ K1 @ G0inv) @ IdM
+
+        self.L0 = L0
+        self.L1 = L1
+        self.L2 = L2
+
+        return L0, L1, L2
+    
     def plot(self, N=0, M=0):
         """Plot, from left to right, (a) the voltage test points and the computed 
         image charges, (b) the relative voltage error around the object in parts per
@@ -237,7 +425,7 @@ class twodimCobject():
         self.results['Fdc [pN]'] = Fdc.to('pN').magnitude
 
         c2 = (4 * np.pi * epsilon0 * V0**2) / (8 * wc * self.zr)
-        gamma = c2 * np.real(complex(0,1) * L2ac)
+        gamma = c2 * np.real(complex(0,1) * L2ac) * -1 # <== jam99: check this sign
         self.results['gamma [pN s/m]'] = gamma.to('pN s/m').magnitude
 
         c3 = (4 * np.pi * epsilon0 * V0**2) / (2 * self.zr)
