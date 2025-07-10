@@ -232,3 +232,10 @@ has been added to the `pyproject.toml` file.  Finally, update Jupyter
 ```
 $ poetry run ipython kernel install --user --name=dissipationtheory
 ```
+
+The new procedure for booting poetry is 
+
+```
+$ conda deactivate
+$ eval $(poetry env activate)
+```

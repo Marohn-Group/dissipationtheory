@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README for dissipationtheory package</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">README for dissipationtheory package</h1>
+</header>
+<!--
+pandoc README.md -o README.html --css pandoc.css -s --mathjax --metadata title="README for dissipationtheory package" && open README.html 
+-->
+<h1 id="dissipationtheory">dissipationtheory</h1>
+<p>Compute atomic force microscope cantilever dissipation and frequency
+noise over metals and dielectrics. Compute cantilever capacitance using
+a sphere plus a cone model.</p>
+<h2 id="theory">Theory</h2>
+<p>This package implements models of tip-sample capacitance, friction,
+frequency noise, and frequency shift published in the following
+manuscripts.</p>
+<ol type="1">
+<li><p>[<strong>Cherniavskaya2003feb</strong>] Cherniavskaya, O.; Chen,
+L.; Weng, V.; Yuditsky, L.; Brus, L. E. Quantitative Noncontact
+Electrostatic Force Imaging of Nanocrystal Polarizability. <em>J. Phys.
+Chem. B</em> <strong>2003</strong>, <em>107 (7)</em>, 1525.
+https://doi.org/10.1021/jp0265438. Figure 4 is helpful. Equation 19
+(cone-plane capacitance second derivative).</p></li>
+<li><p>[<strong>Kuehn2006apr</strong>] Kuehn, S.; Loring, R. F.; Marohn,
+J. A. Dielectric Fluctuations and the Origins of Noncontact Friction.
+<em>Phys. Rev. Lett.</em> <strong>2006</strong>, <em>96 (15)</em>,
+156103. https://doi.org/10.1103/PhysRevLett.96.156103.</p></li>
+<li><p>[<strong>Yazdanian2008jun</strong>] Yazdanian, S. M.; Marohn, J.
+A.; Loring, R. F. Dielectric Fluctuations in Force Microscopy:
+{N}oncontact Friction and Frequency Jitter. <em>J. Chem. Phys.</em>
+<strong>2008</strong>, <em>128 (22)</em>, 224706.
+https://doi.org/10.1063/1.2932254.</p></li>
+<li><p>[<strong>Yazdanian2009jun</strong>] Yazdanian, S. M.; Hoepker,
+N.; Kuehn, S.; Loring, R. F.; Marohn, J. A. Quantifying Electric Field
+Gradient Fluctuations over Polymers Using Ultrasensitive Cantilevers.
+<em>Nano Lett.</em> <strong>2009</strong>, <em>9 (6)</em>, 2273.
+https://doi.org/10.1021/nl9004332. Supplement to: Quantifying Electric
+Field Gradient Fluctuations over Polymers Using Ultrasensitive
+Cantilevers. <em>Nano Lett.</em> <strong>2009</strong>, <em>9 (10)</em>,
+3668. https://doi.org/10.1021/nl901850b.</p></li>
+<li><p>[<strong>Hoepker2011dec</strong>] Hoepker, N.; Lekkala, S.;
+Loring, R. F.; Marohn, J. A. Dielectric Fluctuations over Polymer Films
+Detected Using an Atomic Force Microscope. <em>J. Phys. Chem. B</em>
+<strong>2011</strong>, <em>115 (49)</em>, 14493.
+https://doi.org/10.1021/jp207387d. Equations 4 (frequency shift) and 22
+(cone-plane capacitance). The paper directs you to the supplement for
+the cone-plane capacitance, but the information is not there
+(sorry).</p></li>
+<li><p>[<strong>Hoepker2013jan</strong>] Hoepker, N. Fluctuations near
+Thin Films of Polymers, Organic Photovoltaics, and Organic
+Semiconductors Probed by Electric Force Microscopy. PhD thesis, Cornell
+University <strong>2013</strong>. http://hdl.handle.net/1813/33910.
+Equations 2.49 (cone-plane capacitance) and equations 2.51 and 2.52
+(sphere-plane capacitance).</p></li>
+<li><p>[<strong>Lekkala2012sep</strong>] Lekkala, S.; Hoepker, N.;
+Marohn, J. A.; Loring, R. F. Charge Carrier Dynamics and Interactions in
+Electric Force Microscopy. <em>J. Chem. Phys.</em>
+<strong>2012</strong>, <em>137 (12)</em>, 124701.
+https://doi.org/10.1063/1.4754602.</p></li>
+<li><p>[<strong>Lekkala2013nov</strong>] Lekkala, S.; Marohn, J. A.;
+Loring, R. F. Electric Force Microscopy of Semiconductors: Theory of
+Cantilever Frequency Fluctuations and Noncontact Friction. <em>J. Chem.
+Phys.</em> <strong>2013</strong>, <em>139 (18)</em>, 184702.
+https://doi.org/10.1063/1.4828862.</p></li>
+</ol>
+<p>We plan to incorporate equations from the following two papers in the
+near future.</p>
+<ol start="9" type="1">
+<li><p>[<strong>Loring2022sep</strong>] Loring, R. F. Noncontact
+Friction in Electric Force Microscopy over a Conductor with Nonlocal
+Dielectric Response. <em>J. Phys. Chem. A</em> <strong>2022</strong>,
+<em>126 (36)</em>, 6309.
+https://doi.org/10.1021/acs.jpca.2c04428.</p></li>
+<li><p>[<strong>Loring2023jul</strong>] Loring, R. F. Voltage
+Fluctuations and Probe Frequency Jitter in Electric Force Microscopy of
+a Conductor. <em>J. Chem. Phys.</em> <strong>2023</strong>, <em>159
+(4)</em>, 044703. https://doi.org/10.1063/5.0160556.</p></li>
+</ol>
+<h2 id="installation">Installation</h2>
+<h2 id="install-the-development-version">Install the development
+version</h2>
+<h3 id="via-poetry">Via poetry</h3>
+<p>I am using the poetry tool (<a
+href="https://python-poetry.org/">link</a>) for dependency management
+and packaging. So install the poetry tool. I usually run the conda
+python distribution at the command line, deactivate conda before
+installing poetry.</p>
+<pre><code>$ conda deactivate
+$ curl -sSL https://install.python-poetry.org | python3 -
+$ open ${HOME}/.bash_profile</code></pre>
+<p>and in the <code>.bash_profile</code> file add</p>
+<pre><code>export PATH=&quot;/Users/jam99/.local/bin:$PATH&quot;</code></pre>
+<p>As follows, run the <code>.bash_profile</code> file to update the
+path. This will reactivate conda, so deactivate it again. We should now
+be able to run poetry at the command line.</p>
+<pre><code>$ source ${HOME}/.bash_profile
+$ conda deactivate
+$ poetry --version
+Poetry (version 1.4.2)</code></pre>
+<p>There is as yet no python available at the command line. Next create
+a <code>pyproject.toml</code> file that will specify the virtual
+environment (i.e., tells poetry what version of python to run and what
+packages to load). To create the <code>pyproject.toml</code> file I ran
+<code>poetry init</code> and answered the questions. Afterwards, invoke
+the virtual environment as follows. Verify that python is now running at
+the command line.</p>
+<pre><code>$ poetry shell
+$ python --version
+Python 3.8.5</code></pre>
+<p>While python is installed, none of the packages are:</p>
+<pre><code>$ python -c &quot;import numpy as np&quot;
+ModuleNotFoundError: No module named &#39;numpy&#39;</code></pre>
+<p>To install the packages run</p>
+<pre><code>$ poetry install --all-extras</code></pre>
+<p>and be prepared to wait while the many dependent packages are
+installed. We now have a <code>poetry.lock</code> file present. To run
+the unit tests,</p>
+<pre><code>$ poetry run pytest</code></pre>
+<p>After updating the package dependencies in
+<code>pyproject.toml</code>, I’ll run</p>
+<pre><code>$ poetry lock
+$ poetry install</code></pre>
+<p>Rememember to deactivate any conda environments before you start, to
+avoid errors resulting from package collisions. If you are coming back
+to work on the package, the working commands are</p>
+<pre><code>$ conda deactivate
+$ poetry lock
+$ poetry install --all-extras
+$ poetry run pytest</code></pre>
+<p>Note: I upgraded the python version in the <code>.toml</code> file
+from 3.8 to 3.9 but then got an error trying to launch
+<code>poetry shell</code>. First I have to run</p>
+<pre><code>$ poetry env use 3.9</code></pre>
+<p>which sets up a new virtual environment. Now I can proceed with
+adding a package that requires python 3.9, like sphinx</p>
+<pre><code>$ poetry add sphinx
+$ poetry lock
+$ poetry install --all-extras
+$ poetry run pytest</code></pre>
+<h3 id="adding-and-running-jupyter">Adding and running jupyter</h3>
+<p>To install,</p>
+<pre><code>$ poetry add -D jupyter
+$ jupyter notebook</code></pre>
+<p>Because I want to run the notebook in MS Visual Studio Code, I’ll
+need to create a named Jupyter kernel based on this poetry
+environment.</p>
+<pre><code>$ poetry run ipython kernel install --user --name=dissipationtheory
+Installed kernelspec dissipationtheory in /Users/jam99/Library/Jupyter/kernels/dissipationtheory</code></pre>
+<h3 id="via-conda">Via conda</h3>
+<p>Alternatively</p>
+<pre><code>$ conda create -n dissipationtheory python=3.8
+$ pip install .[test]
+$ python -m pytest</code></pre>
+<h3 id="total-lines-of-code">Total lines of code</h3>
+<p>The lines of code in the repository can be viewed by running</p>
+<pre><code>git ls-files *.py | xargs wc -l</code></pre>
+<h3 id="upgrading-poetry">Upgrading poetry</h3>
+<p>To implement the bessel function <code>scipy.special.j0</code> in a
+jit-compiled function, the numba-scipy package is required. This could
+in principle be added using <code>poetry add numba-scipy</code> bit this
+adding procedure could not resolve the environment (after 20
+minutes).</p>
+<p>In principle, after exiting poetry and conda, I should be able to run
+<code>poetry self update</code> to update poetry. However, I got the
+error “The current project’s Python requirement (3.8.5) is not
+compatible with some of the required packages Python requirement”.
+Poetry requires a Python version &lt;4.0 and &gt;=3.9. So let me create
+a conda environment with Python 3.10 as follows.</p>
+<pre><code>$ conda deactivate
+$ conda create -n py310 python=3.10 </code></pre>
+<p>This installation takes a while. Now activate the new Python
+environment and try to update poetry</p>
+<pre><code>$ conda activate py310
+$ poetry self update</code></pre>
+<p>This updating fails with the error “The current project’s Python
+requirement (3.8.5) is not compatible …”. Exercise the “nuclear option”
+by re-installing poetry as follows.</p>
+<pre><code>$ curl -sSL https://install.python-poetry.org | python3 -
+$ poetry --version
+Poetry (version 2.1.3)
+$ which poetry
+/Users/jam99/.local/bin/poetry
+$ which python
+/Users/jam99/opt/anaconda3/envs/py310/bin/python</code></pre>
+<p>Poetry no longer has a <code>shell</code> command. Ugh. Install all
+packages, update the lock, and activate the resulting environment
+following directions <a
+href="https://python-poetry.org/docs/managing-environments/">here</a>. I
+have listed <code>scipy</code> as a package in the <code>.toml</code>
+file, so if Python can import <code>scipy</code> then I have entered the
+virtual environment ok.</p>
+<pre><code>$ poetry install --all-extras
+$ poetry lock
+$ $ poetry env activate
+source /Users/jam99/Library/Caches/pypoetry/virtualenvs/dissipationtheory-Uvi85QQO-py3.10/bin/activate
+$ eval $(poetry env activate)
+$ python -c &quot;import scipy&quot;</code></pre>
+<p>Now try adding the <code>numba-scipy</code> package. Frustratingly,
+this addition fails. It is not clear from the convoluted error message
+what the problem is. Remove the <code>scipy</code> line from the
+<code>pyproject.toml</code> file, run
+<code>poetry install --all-extras</code> and <code>poetry lock</code>.
+Surprisingly, the <code>scipy</code> package is still installed.</p>
+<p><code>$ poetry show | grep "scipy" scipy 1.15.3</code></p>
+<p>Running the command</p>
+<pre><code>poetry show --tree | more</code></pre>
+<p>is helpful. I can see that the <code>scipy</code> package is required
+by <code>freqdemod</code> and <code>lmfit</code>. I hypothesize that
+this is why poetry did not uninstall <code>scipy</code> when asked. Let
+me try adding <code>numba-scipy</code> by more carefully specifying the
+Python version. In the <code>.toml</code> file, specify the version of
+Python as follows:</p>
+<pre><code>python = &quot;3.10.2&quot;</code></pre>
+<p>Now run <code>poetry install --all-extras</code>,
+<code>poetry lock</code>, and try</p>
+<pre><code>$ poetry add numba-scipy</code></pre>
+<p>Happily, the environment resolves in 1.1s! The <code>scipy</code>
+package is downgraded from version 1.15.3 to 1.10.1 and the
+<code>numba-scipy</code> package 0.4.0 is installed. I get the message
+“Writing lock file” and I can see that a line</p>
+<pre><code>numba-scipy = &quot;^0.4.0&quot;</code></pre>
+<p>has been added to the <code>pyproject.toml</code> file. Finally,
+update Jupyter</p>
+<pre><code>$ poetry run ipython kernel install --user --name=dissipationtheory</code></pre>
+<p>The new procedure for booting poetry is</p>
+<pre><code>$ conda deactivate
+$ eval $(poetry env activate)</code></pre>
+</body>
+</html>
