@@ -384,12 +384,12 @@ class twodimCobject():
         
         return fig
 
-    def properties(self):
+    def properties(self, alpha=0.):
 
         # Lambda values at 0 frequency and the cantilever frequency
         
-        L0dc, L1dc, L2dc = self.solve(0.)
-        L0ac, L1ac, L2ac = self.solve(self.sample.cantilever.omega_c)
+        L0dc, L1dc, L2dc = self.solve(0., alpha)
+        L0ac, L1ac, L2ac = self.solve(self.sample.cantilever.omega_c, alpha)
 
         for key, val in zip(
             ['L0dc', 'L1dc', 'L2dc', 'L0ac', 'L1ac', 'L2ac'],
