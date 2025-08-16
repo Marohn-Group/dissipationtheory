@@ -33,6 +33,7 @@ sphinx-rtd-theme = "^2.0.0"
 h5py = "^3.11.0"
 freqdemod = {git = "https://github.com/JohnMarohn/FreqDemod.git"}
 numba-scipy = "^0.4.0"
+seaborn = "^0.13.2"
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov", "tox", "tox-conda"]
