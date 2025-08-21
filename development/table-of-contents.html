@@ -565,6 +565,167 @@ Study 37 calculation was fast enough to enable least-squares fitting of
 the data to obtain a tip radius and cone angle (this took about a
 minute). Below I perform code profiling, brainstorm ways to speed up
 data analysis, and explore vector integration.</p></li>
+<li><p><strong>Study 51</strong> (<a
+href="dissipation-theory--Study-51.html">html</a>). Test and profile the
+code in the <code>dissipationtheory9a.py</code>.</p></li>
+<li><p><strong>Study 52</strong> (<a
+href="dissipation-theory--Study-52.html">html</a>). Test and profile the
+code in the <code>dissipationtheory9b.py</code>.</p></li>
+<li><p><strong>Study 53</strong> (<a
+href="dissipation-theory--Study-53.html">html</a>). Explore writing a
+fast <code>twodimCobject</code> object; create fast, compiled
+<code>coulombmatrix_jit</code> and <code>Kmatrix_jit</code> functions.
+In Study 50 (<a href="dissipation-theory--Study-50.html">html</a>) I
+compared the frequency shift measured over gold at 28 tip-sample
+separations to the frequency shift computed, using
+<code>twodimCobject</code> from <code>dissipationtheory8c.py</code>, for
+two tip models, (1) a sphere and (2) a sphere-plus-cone, both over a
+Type I “metallic” sample. These computations were painfully slow. For a
+<span class="math inline">\(15 \times 30 = 450\)</span> element array,
+the <code>twodimCobject.solve</code> function took 4.3 seconds to
+execute. It consequently took <em>two minutes</em> to calculate
+frequency versus tip-sample separation data, too slow for least-squares
+fitting of data to obtain the tip radius and cone angle. The limiting
+step in the computation is setting up the Coulomb matrix and the <span
+class="math inline">\(K_n\)</span> matrices. Below I develop fast,
+compiled functions for setting up these matrices and I benchmark their
+execution time for a <span class="math inline">\(15 \times 20 =
+300\)</span> element array. These functions are
+<code>coulombmatrix_jit</code> (0.2 ms) and <code>Kmatrix_jit</code>
+(0.3 ms for metal, 3 ms for Type III sample). Creating a compiled
+function to set up the <span class="math inline">\(K_n\)</span> matrices
+for a Type III sample required (1) using a newly written
+<code>integrand3jit</code> function with simple inputs; (2) replacing
+<code>scipy.integrate.quad_vec</code> with a 30-point Newton-Cotes
+integration; and (3) writing the function <code>Kmatrix_jit</code>
+<em>very</em> carefully so that <code>jit</code> can compile it. Further
+work is required to benchmark the Newton-Cotes integration againt
+<code>scipy.integrate.quad_vec</code> for a range of sample parameters.
+Nevertheless, the new compiled functions suggest that it should be
+possible to calculate a frequency shift to experimental accuracy for a
+numerically modeled tip in under 1 ms for a metal and in under 20 ms for
+a Type I, II, or III semiconductor sample.</p></li>
+<li><p><strong>Study 54</strong> (<a
+href="dissipation-theory--Study-54.html">html</a>). Write and test a
+fast <code>twodimCobject</code> built around <code>KmatrixIII_jit</code>
+and <code>KmatrixIV_jit</code>. I find that <code>KmatrixIV_jit</code>
+performs well and yields the expected sphere capacitance derivatives. I
+find that <code>KmatrixIII_jit</code> performs poorly but can be fixed
+by using a different scaling parameter for each matrix element’s
+integral. This leads to a breakdown of my paper-and-pencil linear
+algebra. So while I can write code to quickly and accurately compute the
+<span class="math inline">\(K_n\)</span>’s, I now have to deal with an
+explosion of scaling parameters, which my paper-and-pencil solutions do
+not presently account for. I need to go back to my paper-and-pencil
+linear algebra and work out a fix. (This notebook is a bit of a mess,
+with different sections written <em>not</em> in chronological
+order.)</p></li>
+<li><p><strong>Study 55</strong> (<a
+href="dissipation-theory--Study-55.html">html</a>). Optimize
+Newton-Cotes integration of the integral <span
+class="math inline">\({\cal I}_{2}(x)\)</span> for <span
+class="math inline">\(0 \leq x \leq 2\)</span>. The reaction field
+matrices <span class="math inline">\(K_{\ell}\)</span> can be written in
+terms of a unitless integral <span class="math inline">\({\cal
+I}_{\ell}(x)\)</span> given below. The <span
+class="math inline">\(x\)</span> variable will likely be limited to the
+range <span class="math inline">\(0 \leq x \leq 2\)</span>. Over this
+range, optimize the computation of the integral using the Newton-Cotes
+method. We find an optimum order <span class="math inline">\(N \sim
+30\)</span> and optimum upper integration bound of <span
+class="math inline">\(y_{\mathrm{max}} \sim 15\)</span>.</p></li>
+<li><p><strong>Study 56</strong> (<a
+href="dissipation-theory--Study-56.html">html</a>). Explore a
+Fourier-transform based approach to integrating <span
+class="math inline">\({\cal I}_{2}(x)\)</span>. The Newton-Cotes
+integrator explored previously performs very poorly at <span
+class="math inline">\(x \geq 2\)</span>, limiting our calcultions of
+frequency shift and friction to tip-sample separation <span
+class="math inline">\(h \geq R/4\)</span>, with <span
+class="math inline">\(R\)</span> the tip radius. If we had an integrator
+working to <span class="math inline">\(x \sim 5\)</span> then we could
+perform calculations down to <span class="math inline">\(h \leq
+R/10\)</span>, which would be desirable. Here we explore a
+Fourier-transform based approach to integrating <span
+class="math inline">\({\cal I}_{2}(x)\)</span>. In contrast with the
+Newton-Cotes integrator, the FT integrator maintains excellent accuracy
+for <span class="math inline">\({\cal I}_{2}(x)\)</span> at large <span
+class="math inline">\(x\)</span>, although at the cost of a 7-fold
+increase in execution time (from 3 to 21 microseconds per integration).
+The FT integrator has horrendous errors for <span
+class="math inline">\({\cal I}_{0}(x)\)</span>, however, unless <span
+class="math inline">\(N\)</span> is very large, say <span
+class="math inline">\(64\)</span>k. Future effort should focus on
+getting the Newton-Cotes integrator to work better at large <span
+class="math inline">\(x\)</span>, perhaps by breaking the <span
+class="math inline">\(y\)</span> axis into subregions informed by our
+knowledge of the Bessel-function zeros.</p></li>
+<li><p><strong>Study 57</strong> (<a
+href="dissipation-theory--Study-57.html">html</a>). An improved
+Newton-Cotes integrator for <span class="math inline">\({\cal
+I}_{\ell}(x)\)</span> valid at large <span
+class="math inline">\(x\)</span>. Here we develop a Newton-Cotes
+integrator to calculate <span class="math inline">\({\cal
+I}_{\ell}(x)\)</span> accurately at large <span
+class="math inline">\(x\)</span>. We achieve this goal by breaking the
+integration axis into subregions, informed by our knowledge of the
+Bessel-function zeros. The resulting integrator achieves a fractional
+error below 20 parts per million for <span class="math inline">\(0 \leq
+x \leq 10\)</span>, corresponding to a tip-sample separation of <span
+class="math inline">\(R/20 \leq h &lt; \infty\)</span>. The execution
+time is reasonably good.</p></li>
+<li><p><strong>Study 58</strong> (<a
+href="dissipation-theory--Study-58.html">html</a>). Write a fast
+<code>twodimCobject</code> object (revisited). Now that I have an
+accurate and reasonably fast integrator in place (<a
+href="dissipation-theory--Study-57.html">Study 57</a>), let me revisit
+writing a fast <code>twodimCobject</code> object for simulating the
+capacitance, dissipation, and frequency shift of a finite tip (<a
+href="dissipation-theory--Study-53.html">Study 53</a>). Below I develop
+code for calculating cantilever observables over a sample consisting of
+a semi-infinite metal (Type IV sample) and semi-infinite semiconductor
+(Type III sample). The code is a combination of compiled functions and
+uncompiled Python. The execution time is reasonably good — 10 ms for a
+metallic / Type IV sample and 50 ms for semiconductor / Type III sample.
+Accuracy of the code was demonstrated by computing capacitance and
+capacitance derivatives versus height, which can be compared to series
+solutions for the case of a sphere over a (1) semi-infinite metal sample
+and (2) semi-infinite dielectric sample. The relative accuracy was
+highly dependent on tip-sample separation and was in the 10’s of part
+per million range at experimentally relevant tip-sample
+separations.</p></li>
+<li><p><strong>Study 59</strong> (<a
+href="dissipation-theory--Study-59.html">html</a>). Test drive the new
+<code>twodimCobject</code> object. I have moved the code developed in <a
+href="dissipation-theory--Study-58.html">Study 58</a> into
+<code>dissipation9e.py</code>. Take the new code for a test
+drive.</p></li>
+<li><p><strong>Study 60</strong> (<a
+href="dissipation-theory--Study-60.html">html</a>). Understand and
+improve the sphere-plus-cone model in the <code>twodimCobject</code>
+object. In
+<code>2025-07-10--jam99--20240222-rerun-ringdown-NiOx-U551--Study-1.ipynb</code>
+(<a
+href="file:///Users/jam99/Dropbox/_JAM_MS__Cohn202407__BLDS/notes-and-scripts/2025-07-10--jam99--20240222-rerun-ringdown-NiOx-U551--Study-1.html">html</a>),
+I fit frequency and dissipation data collected versus voltage and
+tip-sample separation using a sphere-plus-cone tip model. I found that
+the calculated frequency diverged at <em>large</em> tip-sample
+separation <span class="math inline">\(h\)</span>. Looking at the image
+charges, I observed the two leading tip charges became large and of
+oppositite sign at large <span class="math inline">\(h\)</span>. Here I
+show that the divergence of the image charges, and the calculated
+frequency, can be eliminated by adding a small filtering parameter <span
+class="math inline">\(\alpha = 1 \times 10^{-6}\)</span> without
+affecting the calculated cantilever frequency significantly.</p></li>
+<li><p><strong>Study 61</strong> (<a
+href="dissipation-theory--Study-61.html">html</a>). Test drive the new
+<code>twodimCobject</code> object in<code>dissipation10e.py</code>.
+Augment <code>dissipation9e.py</code> to compute the BLDS spectrum using
+Loring’s 07/23/25 pdf report and Marohn’s 08/01/25 handwritten notes.
+Create a new <code>twodimCobject</code> object
+in<code>dissipation10e.py</code> that computes the cantilever frequency
+shift with (1) an AC voltage and (2) an AM-modulated AC voltage applied
+to the cantilever tip.</p></li>
 </ul>
 </body>
 </html>
