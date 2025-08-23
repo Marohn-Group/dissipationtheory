@@ -1,6 +1,27 @@
+# dissipationtheory9b.py
 # Author: John A. Marohn
 # Date: 2025-06-05
 # Summary: numba/jit functions from dissipation7.py
+
+# Classes:
+#
+# - CantileverModelJit
+# - SampleModel1Jit
+# - SampleModel2Jit
+# - SampleModel3Jit
+# - SampleModel4Jit
+#
+# Functions:
+#
+# - mysech_jit
+# - mycsch_jit
+# - integrand1jit
+# - integrand2jit
+# - integrand3jit
+# - K_jit
+# - Kunits_jit
+# - Kmetal_jit
+# - Kmetalunits_jit
 
 import numpy as np
 import cmath

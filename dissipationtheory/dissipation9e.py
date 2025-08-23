@@ -1,8 +1,19 @@
-# dissipationtheory9d.py
-# John A. Marohn (jam99@cornell.edu)
-# Created 2025-07-03
+# dissipationtheory9e.py
+# Author: John A. Marohn (jam99@cornell.edu)
+# Date: 2025-07-03
+# Summary: Code from dissipation-theory--Study-58.ipynb.  Rewrite functions in dissipation9c.py 
+# for incorporation into fast, compiled matrix-generating functions.
 #
-# Code from dissipation-theory--Study-58.ipynb
+#
+# Functions:
+#
+# - Cmatrix_jit
+# - rpIII_jit
+# - KmatrixIII_jit
+# - KmatrixIV_jit
+#
+#  Classes:
+#  - twodimCobject
 
 import numpy as np
 from numba import jit

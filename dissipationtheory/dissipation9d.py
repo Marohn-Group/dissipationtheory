@@ -1,6 +1,10 @@
 # dissipationtheory9d.py
-# John A. Marohn (jam99@cornell.edu)
-# Created 2025-06-18
+# Author: John A. Marohn (jam99@cornell.edu)
+# Date: 2025-06-18
+# Summary: Obsolete, non-functioning code.  See dissipationtheory9e.py.
+#
+# Classes:
+# - twodimCobject
 
 import numpy as np
 import matplotlib.pylab as plt

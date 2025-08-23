@@ -1,6 +1,28 @@
+# dissipationtheory9a.py
 # Author: John A. Marohn
 # Date: 2025-06-05
 # Summary: Pure python functions from dissipation7.py
+
+# Classes:
+#
+# - CantileverModel
+# - SampleModel1
+# - SampleModel2
+# - SampleModel3
+# - SampleModel4
+#
+# Functions:
+#
+# - mysech
+# - mycsch
+# - integrand1
+# - integrand2
+# - integrand3
+# - isMetal
+# - K
+# - Kunits
+# - Kmetal
+# - Kmetalunits
 
 import numpy as np
 import cmath

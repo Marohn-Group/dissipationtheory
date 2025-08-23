@@ -16,7 +16,7 @@ def metalwrapper(x):
 class TestDissipation9aMethods(unittest.TestCase):
     """Test that similar K values are obtained when sample parameters are pushed to limiting cases.
     
-    For example, a Type III sample with hd -> 0 should behave like a Type III sample.
+    For example, a Type II sample with hd -> 0 should behave like a Type III sample.
     """
 
 

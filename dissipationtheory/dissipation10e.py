@@ -1,12 +1,20 @@
 # dissipationtheory9d.py
-# John A. Marohn (jam99@cornell.edu)
-# Created 2025-07-03
+# Author: John A. Marohn (jam99@cornell.edu)
+# Date: 2025-07-03
+# Summary: Code from dissipation-theory--Study-58.ipynb.  Augment dissipation9e.py to compute 
+# the BLDS spectrum using Loring's 07/23/25 pdf report and Marohn's 08/01/25 handwritten notes.
 #
-# Code from dissipation-theory--Study-58.ipynb
+# 
+# Functions:
 #
-# Augment dissipation9e.py to compute the BLDS spectrum using 
-# Loring's 07/23/25 pdf report and Marohn's 08/01/25 handwritten notes.
+# - Cmatrix_jit
+# - rpIII_jit
+# - KmatrixIII_jit
+# - KmatrixIV_jit
 #
+# Classes:
+# 
+# - twodimCobject
 
 import numpy as np
 from numba import jit
