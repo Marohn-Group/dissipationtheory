@@ -1,4 +1,4 @@
-# dissipationtheory9d.py
+# dissipationtheory10e.py
 # Author: John A. Marohn (jam99@cornell.edu)
 # Date: 2025-07-03
 # Summary: Code from dissipation-theory--Study-58.ipynb.  Augment dissipation9e.py to compute 
@@ -93,7 +93,7 @@ def KmatrixIII_jit(omega, omega0, kD, es, sj, rk, j0s, an):
                 
                 y_vector = np.linspace(yb[index], yb[index+1], N+1)
                 dy = (yb[index+1] - yb[index])/N
-            
+
                 integral0 = np.zeros_like(y_vector, dtype=np.complex128)
                 integral1 = np.zeros_like(y_vector, dtype=np.complex128)
                 integral2 = np.zeros_like(y_vector, dtype=np.complex128)

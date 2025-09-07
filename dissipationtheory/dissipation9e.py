@@ -2,7 +2,7 @@
 # Author: John A. Marohn (jam99@cornell.edu)
 # Date: 2025-07-03
 # Summary: Code from dissipation-theory--Study-58.ipynb.  Rewrite functions in dissipation9c.py 
-# for incorporation into fast, compiled matrix-generating functions.
+# for incorporation into fast, compiled matrix-generating functions.  Obsolete; see dissipationtheory10e.py.
 #
 #
 # Functions:
