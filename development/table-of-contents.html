@@ -36,7 +36,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 <ul>
 <li>author: John A. Marohn</li>
 <li>created: 2024-10-29</li>
-<li>last updated: 2025-06-10</li>
+<li>last updated: 2025-09-06</li>
 </ul>
 <p>In the <code>dissipationtheory/development</code> folder there are a
 number of <em>studies</em> — Jupyter notebooks in which I experimented
@@ -726,6 +726,48 @@ Create a new <code>twodimCobject</code> object
 in<code>dissipation10e.py</code> that computes the cantilever frequency
 shift with (1) an AC voltage and (2) an AM-modulated AC voltage applied
 to the cantilever tip.</p></li>
+<li><p><strong>Study 62</strong> (<a
+href="dissipation-theory--Study-62.html">html</a>). Unit testing the
+Type III sample computations. In anticipation of adding code to
+calculate the frequency shift and dissipation of Type I and Type II
+samples, develop unit tests for Type III and Type IV samples. In these
+tests we compare the real and imaginary parts of the <span
+class="math inline">\(K_n\)</span> integrals (<span
+class="math inline">\(n = 0, 1, 2\)</span>) computed using
+<code>K_jit</code> in <code>dissipation9b.py</code> to those computed
+using <code>KmatrixIII_jit</code> and <code>KmatrixIV_jit</code> in
+<code>dissipation10e.py</code>. These unit tests reveal that the
+integration scheme in <code>KmatrixIII_jit</code> in
+<code>dissipation10e.py</code> has relatively poor accuracy and needs
+improvement. Below we develop an improved integration scheme,
+<code>KmatrixIII_jit</code> in <code>dissipation11e.py</code>.</p></li>
+<li><p><strong>Study 63</strong> (<a
+href="dissipation-theory--Study-63.html">html</a>). A new integration
+algorithm and more unit testing of Type III sample computations. Unit
+testing of the <span class="math inline">\(K_n\)</span> functions
+<code>dissipation11e.py</code> revealed that the agreement between the
+(fast) new integration scheme in <code>dissipation11e.py</code> and the
+(slow) integration scheme in <code>scipy.integrate</code> was
+unacceptably poor at low frequency, especially for the imaginary part of
+the integral. Here we examine the integrand and devise an improved fast
+integration scheme based on a logarithmic change of variables. This new
+integration algorithm is coded in <code>dissipation12e.py</code>, with
+some preliminary unit tests coded in
+<code>test_dissipation12e.py</code>. Below we carry out comprehenvive
+unit testing of the <span class="math inline">\(K_n\)</span> functions
+by looping over 36288 combinations of the variables <span
+class="math inline">\(\boldsymbol{s}_j\)</span>, <span
+class="math inline">\(\boldsymbol{r}_k\)</span>, <span
+class="math inline">\(\omega\)</span>, <span
+class="math inline">\(\epsilon_{\mathrm{s}}\)</span>, <span
+class="math inline">\(\rho\)</span>, and <span
+class="math inline">\(\sigma\)</span>. Breaking the integrand into 10
+sub-intervals, we achieve an rms error in the six (real and imaginary)
+<span class="math inline">\(K_1\)</span>, <span
+class="math inline">\(K_2\)</span>, and <span
+class="math inline">\(K_3\)</span> values of <span
+class="math inline">\(\epsilon \leq 0.036\)</span>%. Each integration
+takes less than 8 ms.</p></li>
 </ul>
 </body>
 </html>
