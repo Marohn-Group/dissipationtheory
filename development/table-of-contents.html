@@ -36,7 +36,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 <ul>
 <li>author: John A. Marohn</li>
 <li>created: 2024-10-29</li>
-<li>last updated: 2025-09-06</li>
+<li>last updated: 2025-09-09</li>
 </ul>
 <p>In the <code>dissipationtheory/development</code> folder there are a
 number of <em>studies</em> — Jupyter notebooks in which I experimented
@@ -768,6 +768,26 @@ class="math inline">\(K_2\)</span>, and <span
 class="math inline">\(K_3\)</span> values of <span
 class="math inline">\(\epsilon \leq 0.036\)</span>%. Each integration
 takes less than 8 ms.</p></li>
+<li><p><strong>Study 64</strong> (<a
+href="dissipation-theory--Study-64.html">html</a>). Code up and
+unit-test the computation of the <span
+class="math inline">\(K_n\)</span> integrals for Type I and Type II
+samples. Here we test four new functions in
+<code>dissipation13e.py</code> – <code>rpI_jit</code>,
+<code>KmatrixI_jit</code>, <code>rpII_jit</code>, and
+<code>KmatrixII_jit</code>. We run unit tests over 34k sample
+parameters, as in Study 63, comparing <span
+class="math inline">\(K_n\)</span> integrals computed using the (slow)
+<code>scipy.integrate</code> function in <code>dissipation9b.py</code>
+to those computed using the (fast) bespoke integration algorithm in
+<code>dissipation13e.py</code>. Using 10 breakpoints in the computation
+of the integrals, the root-mean-square error in the <span
+class="math inline">\(K_n\)</span> integrals is worse for Type I and
+Type II sample than for Type III samples, but is nevertheless below
+0.5%. The run time for Type I and II samples is a factor of two longer
+than for Type III samples. We conclude that the accuracy and run time of
+the Type I and Type II sample <span class="math inline">\(K_n\)</span>
+calculations are sufficiently good to warrant analyzing data.</p></li>
 </ul>
 </body>
 </html>
