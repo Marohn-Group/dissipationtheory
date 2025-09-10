@@ -788,6 +788,25 @@ Type II sample than for Type III samples, but is nevertheless below
 than for Type III samples. We conclude that the accuracy and run time of
 the Type I and Type II sample <span class="math inline">\(K_n\)</span>
 calculations are sufficiently good to warrant analyzing data.</p></li>
+<li><p><strong>Study 65</strong> (<a
+href="dissipation-theory--Study-65.html">html</a>). We have added Type I
+and Type II support to the <code>twodimCobject</code> object in
+<code>dissipation13e.py</code>. We demonstrate this functionality by
+calculating, for a finite tip, the dc frequency shift and dissipation
+versus tip-sample separation and the BLDS spectrum for Type I, II, and
+III samples. For 25 height points, the frequency and friction
+calculation took (user CPU time) 4.1s, 2.5s, 1.7s, and 4.1s for Type I,
+II, and III samples, respectively. Sample I was 15 nm thick and
+exhibited a small negative friction, which is unphysical. This error
+remained when the number of breakpoints was increased from 15 to 45, and
+so is likely not caused by imperfect integration. The error changed with
+the <span class="math inline">\(\alpha\)</span> parameter, but using a
+larger alpha did not eliminate the negative-friction error. For 40
+frequency points, the BLDS spectrum calculation took (user CPU time)
+39s, 8.5s, and 7.3s for Type I, II, and III samples, respectively. The
+BLDS spectrum for the Type II and Type III sample showed the expected
+roll off. The BLDS spectrum from Sample I was negligibly small, but
+exhibited two distinct roll-offs.</p></li>
 </ul>
 </body>
 </html>
