@@ -9,7 +9,9 @@
 #
 # - Cmatrix_jit
 # - rpI_jit
+# - KmatrixI_jit
 # - rpII_jit
+# - KmatrixII_jit
 # - rpIII_jit
 # - KmatrixIII_jit
 # - KmatrixIV_jit
@@ -88,7 +90,7 @@ def rpI_jit(y, omega, omega0, zr, kD, hs, es, ed):
     return rp   
 
 @jit(nopython=True)
-def KmatrixI_jit(omega, omega0, kD, hs, es, ed, sj, rk, j0s, an, verbose=False):
+def KmatrixI_jit(omega, omega0, kD, hs, es, ed, sj, rk, j0s, an, verbose=False, breakpoints=10):
     """The unitless response-function matrices for a Type III semiconductor sample."""
 
     y_min = 2.0e-9
@@ -114,20 +116,18 @@ def KmatrixI_jit(omega, omega0, kD, hs, es, ed, sj, rk, j0s, an, verbose=False):
             # Adjust number of breakpoint points to increase accuracy; 
             # 6 or more is recommended
             
-            BREAKPOINTS = 10
-            
             mask = j0s/(x + 1.0e-6) < y_max
             zero_y_locations = j0s[mask] / x
      
             wb = np.hstack(
-                (np.linspace(np.log(y_min), np.log(y_max), BREAKPOINTS),
+                (np.linspace(np.log(y_min), np.log(y_max), breakpoints),
                  np.log(zero_y_locations)))
             wb = np.sort(wb)
             
             
             if verbose:
                 
-                print('mandatory breakpoints = ', np.linspace(np.log(y_min), np.log(y_max), BREAKPOINTS))
+                print('mandatory breakpoints = ', np.linspace(np.log(y_min), np.log(y_max), breakpoints))
                 print('Bessel zero breakpoints = ', np.log(zero_y_locations))
                 print('sorted breakpoints = ', wb)
             
@@ -200,7 +200,7 @@ def rpII_jit(y, omega, omega0, zr, kD, hd, ed, es):
     return rp
 
 @jit(nopython=True)
-def KmatrixII_jit(omega, omega0, kD, hd, ed, es, sj, rk, j0s, an, verbose=False):
+def KmatrixII_jit(omega, omega0, kD, hd, ed, es, sj, rk, j0s, an, verbose=False, breakpoints=10):
     """The unitless response-function matrices for a Type III semiconductor sample."""
 
     y_min = 2.0e-9
@@ -226,20 +226,18 @@ def KmatrixII_jit(omega, omega0, kD, hd, ed, es, sj, rk, j0s, an, verbose=False)
             # Adjust number of breakpoint points to increase accuracy; 
             # 6 or more is recommended
             
-            BREAKPOINTS = 10
-            
             mask = j0s/(x + 1.0e-6) < y_max
             zero_y_locations = j0s[mask] / x
      
             wb = np.hstack(
-                (np.linspace(np.log(y_min), np.log(y_max), BREAKPOINTS),
+                (np.linspace(np.log(y_min), np.log(y_max), breakpoints),
                  np.log(zero_y_locations)))
             wb = np.sort(wb)
             
             
             if verbose:
                 
-                print('mandatory breakpoints = ', np.linspace(np.log(y_min), np.log(y_max), BREAKPOINTS))
+                print('mandatory breakpoints = ', np.linspace(np.log(y_min), np.log(y_max), breakpoints))
                 print('Bessel zero breakpoints = ', np.log(zero_y_locations))
                 print('sorted breakpoints = ', wb)
             
@@ -310,7 +308,7 @@ def rpIII_jit(y, omega, omega0, zr, kD, es):
     return rp
 
 @jit(nopython=True)
-def KmatrixIII_jit(omega, omega0, kD, es, sj, rk, j0s, an, verbose=False):
+def KmatrixIII_jit(omega, omega0, kD, es, sj, rk, j0s, an, verbose=False, breakpoints=10):
     """The unitless response-function matrices for a Type III semiconductor sample."""
 
     y_min = 2.0e-9
@@ -336,20 +334,18 @@ def KmatrixIII_jit(omega, omega0, kD, es, sj, rk, j0s, an, verbose=False):
             # Adjust number of breakpoint points to increase accuracy; 
             # 6 or more is recommended
             
-            BREAKPOINTS = 10
-            
             mask = j0s/(x + 1.0e-6) < y_max
             zero_y_locations = j0s[mask] / x
      
             wb = np.hstack(
-                (np.linspace(np.log(y_min), np.log(y_max), BREAKPOINTS),
+                (np.linspace(np.log(y_min), np.log(y_max), breakpoints),
                  np.log(zero_y_locations)))
             wb = np.sort(wb)
             
             
             if verbose:
                 
-                print('mandatory breakpoints = ', np.linspace(np.log(y_min), np.log(y_max), BREAKPOINTS))
+                print('mandatory breakpoints = ', np.linspace(np.log(y_min), np.log(y_max), breakpoints))
                 print('Bessel zero breakpoints = ', np.log(zero_y_locations))
                 print('sorted breakpoints = ', wb)
             
@@ -426,13 +422,24 @@ def KmatrixIV_jit(sj, rk):
 class twodimCobject():
 
     def __init__(self, sample):
-        """Here sample is a SampleModel3Jit or SampleModel4Jit object."""
+        """Here sample is a SampleModel1Jit, SampleModel2Jit, SampleModel3Jit, or SampleModel4Jit object."""
 
         self.sample = sample
 
         self.Vr = ureg.Quantity(1, 'V')
         self.zr = ureg.Quantity(1, 'nm')
-        
+
+        self.results = {}
+        self.results['Vts [V]'] = self.sample.cantilever.V_ts
+        self.keys = ['Vts [V]']
+
+        self.alpha = 0.0 # regularization parameter, unitless
+        self.breakpoints = 10  # number of breakpoints for numerical integration, unitless
+
+        self.results['alpha'] = self.alpha
+        self.results['breakpoints'] = self.breakpoints
+        self.keys += ['alpha', 'breakpoints']
+ 
     @property
     def cG(self):
         return (qe / (4 * np.pi * epsilon0 * self.Vr * self.zr)).to('dimensionless').magnitude
@@ -477,14 +484,17 @@ class twodimCobject():
         self.title1 = f'sphere, $r$ = {r:0.1f} nm, $h$ = {h:0.1f} nm, $N$ = {N:d} image charges, $M$ = {M:d} test points'
         self.title2 = ''
 
-        # initialize the results, useful for plotting
-        self.results = {
-            'alpha': 0, 
+        # Initialize these results, useful for plotting
+
+        results = {
+            'alpha': self.alpha, 
             'q': np.ones(N),
             'S': np.ones(N),
             'Sinv': np.ones(N),
             'cn': 0, 
-            'V': np.zeros(M)}  
+            'V': np.zeros(M)}
+
+        self.results.update(results)
 
     def addtip(self, h):
         """Model a cone-sphere tip above a ground plane.  The tip-sample
@@ -551,16 +561,31 @@ class twodimCobject():
             f'$L$ = {L:0.1f} nm, $\\theta$ = {theta:0.1f}, $N_z$ = {Nz:d}, $N_r$ = {Nr:d}'
         self.title2 = ''
         
-        # initialize the results, useful for plotting
-        self.results = {
-            'alpha': 0, 
+        # Initialize these results, useful for plotting
+
+        results = {
+            'alpha': self.alpha, 
             'q': np.ones(Nz),
             'S': np.ones(Nz),
             'Sinv': np.ones(Nz),
             'cn': 0, 
             'V': np.zeros(Nr)}
 
-    def solve(self, omega, alpha=0.):
+        self.results.update(results)
+
+    def set_alpha(self, alpha):
+        """Set the regularization parameter alpha.  This is a unitless number."""
+        
+        self.alpha = alpha
+        self.results['alpha'] = alpha
+
+    def set_breakpoints(self, breakpoints):
+        """Set the number of breakpoints to use in the numerical integration."""
+        
+        self.breakpoints = breakpoints 
+        self.results['breakpoints'] = breakpoints
+    
+    def solve(self, omega):
         """Solve for the charges.  The parameter $\alpha$ is used to filter
         the singular values in the inverse.  The parameter omega is the unitless
         cantilever frequency in rad/s.       
@@ -584,16 +609,57 @@ class twodimCobject():
                 'sj': self.sj, 
                 'rk': self.rk, 
                 'j0s': j0s, 
-                'an': an}
+                'an': an,
+                'breakpoints': self.breakpoints}
         
             K0, K1, K2 = KmatrixIII_jit(**args)
+
+        elif self.sample.type == 2:
+
+            j0s = scipy.special.jn_zeros(0,100.)
+            an, _ = scipy.integrate.newton_cotes(20, 1)
             
+            args = {'omega': omega, 
+                'omega0': self.sample.omega0,
+                'kD': self.sample.kD,
+                'hd': self.sample.h_d,
+                'ed': self.sample.epsilon_d,
+                'es': self.sample.epsilon_s, 
+                'sj': self.sj, 
+                'rk': self.rk, 
+                'j0s': j0s, 
+                'an': an,
+                'breakpoints': self.breakpoints}
+        
+            K0, K1, K2 = KmatrixII_jit(**args)
+
+        elif self.sample.type == 1:
+
+            j0s = scipy.special.jn_zeros(0,100.)
+            an, _ = scipy.integrate.newton_cotes(20, 1)
+            
+            args = {'omega': omega, 
+                'omega0': self.sample.omega0,
+                'kD': self.sample.kD,
+                'hs': self.sample.h_s,
+                'es': self.sample.epsilon_s, 
+                'ed': self.sample.epsilon_d,
+                'sj': self.sj, 
+                'rk': self.rk, 
+                'j0s': j0s, 
+                'an': an,
+                'breakpoints': self.breakpoints}
+        
+            K0, K1, K2 = KmatrixI_jit(**args)
+
         else:
 
             raise Exception("unknown sample type")
                
         G0 = C - K0
         
+        alpha = self.alpha
+ 
         U, S, VT = np.linalg.svd(G0, full_matrices=False)
         filt = np.diag(np.power(S, 2)/(np.power(S, 2) + alpha**2))
         Sinv = filt * np.diag(np.power(S, -1))
@@ -674,7 +740,7 @@ class twodimCobject():
         
         return fig
 
-    def properties_dc(self, alpha=0.):
+    def properties_dc(self):
         """Compute the cantilever force, friction, and frequency shift when a 
         DC voltage is applied to the cantilever.  The parameter alpha is used to filter
         the singular values in the inverse.  The results are stored in self.results, 
@@ -697,8 +763,8 @@ class twodimCobject():
 
         # Lambda values at 0 frequency and the cantilever frequency
         
-        L0dc, L1dc, L2dc = self.solve(0., alpha)
-        L0ac, L1ac, L2ac = self.solve(self.sample.cantilever.omega_c, alpha)
+        L0dc, L1dc, L2dc = self.solve(0.)
+        L0ac, L1ac, L2ac = self.solve(self.sample.cantilever.omega_c)
 
         for key, val in zip(
             ['L0dc', 'L1dc', 'L2dc', 'L0ac', 'L1ac', 'L2ac'],
@@ -753,7 +819,10 @@ class twodimCobject():
         
         self.results['Delta f dc [Hz]'] = (dfstat + dfdyn).to('Hz').magnitude
 
-    def properties_ac(self, omega_m, alpha=0.):
+        self.keys += ['C0 [aF]', 'C1 [pF/m]', 'C2 [mF/m^2]']
+        self.keys += ['gamma [pN s/m]', 'Delta f dc [Hz]']
+
+    def properties_ac(self, omega_m):
         """Compute the cantilever force and steady-state frequency shift when an 
         AC voltage is applied to the cantilever, with omega_m the voltage oscillation
         frequency. The parameter alpha is used to filter the singular values in 
@@ -772,8 +841,8 @@ class twodimCobject():
 
         # Lambda values at plus and minus omega_m
 
-        L0wmp, L1wmp, L2wmp = self.solve( omega_m, alpha)
-        L0wmm, L1wmm, L2wmm = self.solve(-omega_m, alpha)
+        L0wmp, L1wmp, L2wmp = self.solve( omega_m)
+        L0wmm, L1wmm, L2wmm = self.solve(-omega_m)
 
         for key, val in zip(
             ['L0wmp', 'L1wmp', 'L2wmp', 'L0wmm', 'L1wmm', 'L2wmm'],
@@ -797,7 +866,9 @@ class twodimCobject():
         dfac = c2 * (np.imag(complex(0,1) * (L2wmp + L2wmm)))
         self.results['Delta f ac [Hz]'] = dfac.to('Hz').magnitude
 
-    def properties_am(self, omega_m, omega_am, alpha=0.):
+        self.keys += ['Delta f ac [Hz]']
+
+    def properties_am(self, omega_m, omega_am):
         """Compute the cantilever force and steady-state frequency shift when an 
         amplitude-modulated AC voltage is applied to the cantilever, with omega_m 
         the voltage oscillation frequency and omega_am the amplitude oscillation
@@ -819,12 +890,12 @@ class twodimCobject():
         #   +/- (omega_m + omega_am)
         #   +/- (omega_m - omega_am)
 
-        L0a, L1a, L2a = self.solve( omega_m, alpha)
-        L0b, L1b, L2b = self.solve(-omega_m, alpha)
-        L0c, L1c, L2c = self.solve( omega_m + omega_am, alpha)
-        L0d, L1d, L2d = self.solve(-omega_m - omega_am, alpha)
-        L0e, L1e, L2e = self.solve( omega_m - omega_am, alpha)
-        L0f, L1f, L2f = self.solve(-omega_m + omega_am, alpha)
+        L0a, L1a, L2a = self.solve( omega_m)
+        L0b, L1b, L2b = self.solve(-omega_m)
+        L0c, L1c, L2c = self.solve( omega_m + omega_am)
+        L0d, L1d, L2d = self.solve(-omega_m - omega_am)
+        L0e, L1e, L2e = self.solve( omega_m - omega_am)
+        L0f, L1f, L2f = self.solve(-omega_m + omega_am)
 
 
         for key, val in zip(
@@ -857,4 +928,15 @@ class twodimCobject():
 
         c2 = - (fc * np.pi * epsilon0 * V0**2) / (kc * self.zr)
         dfam= c2 * (np.imag(complex(0,1) * (L2a/16 + L2b/16 + L2c/64 + L2d/64 + L2e/64 + L2f/64)))
-        self.results['Delta f am [Hz]'] = dfam.to('Hz').magnitude        
+        self.results['Delta f am [Hz]'] = dfam.to('Hz').magnitude
+
+        self.keys += ['Delta f am [Hz]']
+
+    def print_key_results(self):
+
+        print('-'*50)
+        for key in self.keys:
+            print('{0:18s} {1:11.3f}    {1:+0.6e}'.format(
+                key.rjust(18),
+                self.results[key]))
+        print('-'*50)
