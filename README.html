@@ -192,6 +192,9 @@ Poetry requires a Python version &lt;4.0 and &gt;=3.9. So let me create
 a conda environment with Python 3.10 as follows.</p>
 <pre><code>$ conda deactivate
 $ conda create -n py310 python=3.10 </code></pre>
+<p>or try, because <code>conda-forge</code> has a greater selection of
+packages than <code>conda</code>,</p>
+<pre><code>conda create -n py310 python=3.10.2 -c conda-forge</code></pre>
 <p>This installation takes a while. Now activate the new Python
 environment and try to update poetry</p>
 <pre><code>$ conda activate py310
