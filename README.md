@@ -167,6 +167,12 @@ $ conda deactivate
 $ conda create -n py310 python=3.10 
 ```
 
+or try, because `conda-forge` has a greater selection of packages than `conda`,
+
+```
+conda create -n py310 python=3.10.2 -c conda-forge
+```
+
 This installation takes a while.  Now activate the new Python environment and try to update poetry
 
 ```
