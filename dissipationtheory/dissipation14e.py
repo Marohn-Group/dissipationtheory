@@ -467,6 +467,20 @@ class twodimCobjectExperimental(twodimCobject):
 
         return L
 
+def comparetwoK(a, b, label='K'):
+    
+    for idx, (Ka, Kb) in enumerate(zip(a,b)):
+
+        err_real = (Ka.real-Kb.real)/Ka.real        
+        print('Re[{:}[{:d}]] {:+0.9e} vs {:+0.9e}, relative error = {:+3.2e}'.format(
+            label, idx, Ka.real, Kb.real, err_real))
+
+    print("")
+    for idx, (Ka, Kb) in enumerate(zip(a,b)):
+        err_imag = (Ka.imag-Kb.imag)/Ka.imag
+        print('Im[{:}[{:d}]] {:+0.9e} vs {:+0.9e}, relative error = {:+3.2e}'.format(
+            label,idx, Ka.imag, Kb.imag, err_imag))   
+
 if __name__ == "__main__":
 
     from dissipationtheory.dissipation13e import Cmatrix_jit, KmatrixIII_jit
