@@ -48,8 +48,14 @@ def C(sj, rk):
 Cmatrix = torch.vmap(torch.vmap(C, (None, 0)), (0, None))
 
 
+@torch.compile
 def rpIII(
-    y: torch.tensor, omega: float, omega0: float, zr: float, kD: float, es: complex
+    y: torch.tensor, 
+    omega: float, 
+    omega0: float, 
+    zr: float, 
+    kD: float,
+    es: complex
 ) -> torch.complex128:
     """Fresnel coefficient for Sample III object:
 
@@ -72,7 +78,7 @@ def rpIII(
 
     return rp
 
-
+@torch.compile
 def rp_III_integrator(
     omega: float,
     omega0: float,
