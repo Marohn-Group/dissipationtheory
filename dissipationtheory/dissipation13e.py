@@ -800,7 +800,7 @@ class twodimCobject():
         self.results['Fdc [pN]'] = Fdc.to('pN').magnitude
 
         c2 = (4 * np.pi * epsilon0 * V0**2) / (8 * wc * self.zr)
-        gamma = c2 * np.real(complex(0,1) * L2ac) * -1 # <== jam99: check this sign
+        gamma = c2 * np.real(complex(0,1) * L2ac) # <== jam99: check this sign
         self.results['gamma [pN s/m]'] = gamma.to('pN s/m').magnitude
 
         c3 = (4 * np.pi * epsilon0 * V0**2) / (2 * self.zr)

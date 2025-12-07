@@ -4,11 +4,48 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 
 - author: John A. Marohn
 - created: 2024-10-29
-- last updated: 2025-09-09
+- last updated: 2025-12-07
 
-In the `dissipationtheory/development` folder there are a number of *studies* --- Jupyter notebooks in which I experimented with calculation and data-analysis code.  The studies have names like `dissipation-theory--Study-1.ipynb` and so forth.  Here I summarize these studies.  
+
+# Software
+
+The `dissipationtheory/dissipationtheory` folder contains both current and obsolete code.  Here I summarize the most useful parts of the current code.
+
+- `constants` contains a `pint`-package unit registry `ureg` and physical constants with units: Bolztmann's constant `kb`, free space permittivity `epsilon0`, the magnitude of the electron charge `qe`, and room temperature `Troom` (i.e. $T = 300$ K).
+
+- `dissipation9a` contains data classes 
+  - `CantileverModel`
+  - `SampleModel1`
+  - `SampleModel2`
+  - `SampleModel3`
+
+- `dissipation9b` contains data classes 
+  - `SampleModel1Jit`
+  - `SampleModel2Jit`
+  - `SampleModel3Jit`
+
+- `dissipation13e.py` contains the class `twodimCobject`:
+  - Tip model: sphere or sphere-plus cone
+  - Calculation method: `numba`, CPU
+  - Samples modeled: Type I, II, III, and IV
+  - Calculated: capacitance derivatives, force, friction, frequency shift (dc, ac, am)
+
+- `dissipation16e.py` contains the class `twodimCobject`:
+  - Tip model: sphere or sphere-plus cone
+  - Calculation method: `torch`, GPU
+  - Samples modeled: Type I and III
+  - Calculated: capacitance derivatives, force, friction, frequency shift (dc, ac, am)
+
+- `dissipation17e.py` contains the class `pointprobeCobject`:
+  - Tip model: point probe
+  - Calculation method: `numba`, CPU
+  - Samples modeled: Type I, II, III, and IV
+  - Calculated: friction and frequency shift (dc, ac)
+
 
 # Studies
+
+In the `dissipationtheory/development` folder there are a number of *studies* --- Jupyter notebooks in which I experimented with calculation and data-analysis code.  The studies have names like `dissipation-theory--Study-1.ipynb` and so forth.  Here I summarize these studies.  
 
 - **Study 1** ([html](dissipation-theory--Study-1.html)).  Explore Loring's recently revised theory for friction over metals.
 
@@ -156,4 +193,16 @@ $f_2 \: [\mathrm{Hz}/\mathrm{V}^2]$ versus $h \: [\mathrm{nm}]$ data measured ov
 
 - **Study 65** ([html](dissipation-theory--Study-65.html)). We have added Type I and Type II support to the `twodimCobject` object in `dissipation13e.py`. We demonstrate this functionality by calculating, for a finite tip, the dc frequency shift and dissipation versus tip-sample separation and the BLDS spectrum for Type I, II, and III samples. For 25 height points, the frequency and friction calculation took (user CPU time) 4.1s, 2.5s, 1.7s, and 4.1s for Type I, II, and III samples, respectively. Sample I was 15 nm thick and exhibited a small negative friction, which is unphysical.  This error remained when the number of breakpoints was increased from 15 to 45, and so is likely not caused by imperfect integration. The error changed with the $\alpha$ parameter, but using a larger alpha did not eliminate the negative-friction error. For 40 frequency points, the BLDS spectrum calculation took (user CPU time) 39s, 8.5s, and 7.3s for Type I, II, and III samples, respectively.  The BLDS spectrum for the Type II and Type III sample showed the expected roll off.  The BLDS spectrum from Sample I was negligibly small, but exhibited two distinct roll-offs.
 
-- **Study 66** ([html](dissipation-theory--Study-66.html)). Demonstrate fast matrix multiplication using `pytorch` and the GPU. For large arrays, show that GPU multiplication using `pytorch` is faster than CPU multiplication using `numpy`.  Frustratingly, the Apple Silicon GPU is limited to single precision.
+- **Study 66** ([html](dissipation-theory--Study-66.html)). Demonstrate fast matrix multiplication using `pytorch` and the GPU. For large arrays, show that GPU multiplication using `pytorch` is faster than CPU multiplication using `numpy`.  Frustratingly, the Apple Silicon GPU is limited to single precision.  See also the following stand-alone python programs I have written to speed-test computations on the GPU using torch, on the GPU using jax, and on the CPU with parallel processing via `concurrent.futures`: `gpu1.py`, `jax1.py`, `multi1.py`, and `multi2.py`.
+
+- **Study 67** ([html](dissipation-theory--Study-67.html)). The goal of this study is to translate representative numba-compiled python functions, running on the CPU, to torch code, running on the GPU. I develop such code for computing (1) the Coulomb matrix and (2) the $K_n$ matrices for a Type III sample (a semi-infinite semiconductor). I begin by reproducing code for the integrand `rpIII_jit` from `dissipation13e.py`. I develop and time torch implementations of the Coulomb matrix calculation. The first implementation, suggested by GitHub Copilot running in Visual Studio Code, uses loops and is slow (48 ms for $21 \times 21$ computations). The second implementation, writting using the `vmap` function, is fast (64 $\mu$s for $21 \times 21$ computations). I next created a torch function for computing the reflection coefficient $r_p$ and the $K_n$ integrals for a Type III sample. The torch `vmap` function was used to thread the $K_n$ integral function over the $r_k$ and $s_j$ matrices to create three matrices $K_0$, $K_1$, and $K_2$. The resulting function `KmatrixIII_torch`, threaded over $21 \times 21$ values of ($r_k, s_j$), took 5.5 ms to run on the GPU. This compares favorably to the 7.4 ms run time of the function `KmatrixIII_jit` running on the CPU.
+
+- **Study 68** ([html](dissipation-theory--Study-68.html)). Having sped up the calculation of the $K_n$ matrices slighly by replacing compiled numpy operations on the CPU with torch computations on the GPU, here I try to obtain a further speedup using parallel processing.  I explore parallel processing using the `concurrent`, `multiprocessing`, and `multiprocess` packages.  All these packages employ pickling.  The `multiprocess` package (using `dill` under the hood) can pickle complicated objects like `twodimCobject`.  Even so, to use `multiprocess` I had to rewrite `twodimCobject` to use `SampleModel3` instead of `SampleModel3Jit` (which was unpickleable). The new `twodimCobject` can be found in `dissipation14e.py` along with `twodimCobjectExperimental` which has mockup code looping over the `.solve()` function using (Method 1) `concurrent.futures.ThreadPoolExecutor`, (Method 2) `multiprocess.Process`, and (Method 3) `concurrent.futures.ProcessPoolExecutor`.  Method 1 took milliseconds, but was no faster than looping; Methods 2 and 3 took seconds. In summary, I have been unable to achieve a further speedup using parallel processing, at least running in a Jupyter notebook.  Future work should focus in implementing parallel computations on the GPU instead.
+
+- **Study 69** ([html](dissipation-theory--Study-69.html)). I used `vmap` to compute the $C$ and $K_n$ matrices at many positions *and* frequencies together on the GPU.  This innovation enabled the calculation of the AC frequency shift 64 times faster than the previous CPU-based calculation. An additional factor of three speed-up was realized by approximating the AM frequency shift as a scaled version of the AC frequency shift. I then demonstrated that the new GPU-based code can compute a BLDS frequency shift fast enough to enable least-squares fitting of data.  To do this, I used the existing CPU-based code to compute the frequency shift in an AM modulation experiment; this frequency shift was treated as an articifial signal. I fit this artificial signal to a scaled AC frequency shift, computed using the new GPU code. This fit recovered the expected dielectric constant, conductivity, and charge density in under 10 seconds.  Next, extend this approach to a Type I sample and then try to fit experimental data.
+
+- **Study 70** ([html](dissipation-theory--Study-70.html)). We want to fit BLDS spectra collected at multiple heights to a set of common fit parameters.  Before extending the Study 69 GPU computations to Type I and Type II samples, extend the Type III sample calculation to include an array of heights as well as an array of frequencies.  Do this by rewriting the `rp_III_integrator` function to accept a new input, a vertical displacement.  Use `torch.vmap` to create a mapping of the new `rp_III_integrator` function onto arrays of height changes $\Delta h$ was well as frequencyes $\omega$ and the vectors $s_j$ and $r_k$.  The height mapping, surprisingly, is no faster than looping.  Employing the mapping does, however, simplify the code considerably.  Write GPU code to compute both and $\Delta f_{\mathrm{ac}}$ and $\Delta f_{\mathrm{am}}$.  Test the new GPU code against CPU code and observe agreement at the few part-per-thousand level. Use the CPU code to generate "data" consisting of BLDS spectra at six heights.  Use the new GPU function to simultaneously fit these six BLDS spectra to obtain best-fit values for dielectric constant, conductivity, and charge density. The fit takes about two minutes and recovers the expected sample parameters.
+
+- **Study 71** ([html](dissipation-theory--Study-71.html)).  Develop code for computing the AC and AM frequency shift for a Type I sample.  Compare the real and imaginary parts of the $K_n$ integrals computed using CPU and GPU code over a wide range of sample parameters. The $r_p$ function is discontinuous when computed on the GPU. This pathology suggests that the error in $\mathrm{Im}[K_2]$ at high $\sigma$ and small $\rho$ is a problem with $r_p$ and not with the integration procedure.   There are a couple of possible sources of the faulty $r_p$, keeping in mind that `torch` code on the GPU is running in single precision and $\theta_1$ and $k / \eta$ are complex numbers.  We could have errors in the (1) the square root of a complex number in $\theta_1$, (2) the square root of a complex number in $k / \eta$, or (3) evaluating `sinh`, `cosh`, or `tanh` with complex argument $\theta_1$.
+
+- **Study 72** ([html](dissipation-theory--Study-72.html)).   Develop code for computing dissipation and frequency shift for a point probe over a Type I, Type II, and Type III sample, encoding formulas provided by Roger Loring on 2026-12-05.  The code developed here is built on the `numba` code in `dissipation13e.py` and the example computations in `dissipation-theory--Study-65.ipynb`; computations are thus performed using compiled code on the CPU, not the GPU.  Perform a test calculation for a Type I sample.  In this test, compare point-probe results to the results of finite-tip/sphere calculation computed using `twodimCobject` in `dissipation13e.py` at large tip-sample separation where Loring's point-probe approximation is valid.
