@@ -59,16 +59,16 @@ class pointprobeCobject():
         """Compute the unitless K0, K1, and K2 integrals.  The units of the 
         integrals are 1/nm, 1/nm**2, and 1/nm**3 respectively.  The integrals
         are returned as pint quantities with units."""
-        
+
+        j0s = scipy.special.jn_zeros(0,100.)
+        an, _ = scipy.integrate.newton_cotes(20, 1)
+
         if self.sample.type == 4:
             
             K0, K1, K2 = KmatrixIV_jit(self.sj, self.rk)
             
         elif self.sample.type == 3:
 
-            j0s = scipy.special.jn_zeros(0,100.)
-            an, _ = scipy.integrate.newton_cotes(20, 1)
-            
             args = {'omega': omega, 
                 'omega0': self.sample.omega0,
                 'kD': self.sample.kD, 
@@ -82,9 +82,6 @@ class pointprobeCobject():
             K0, K1, K2 = KmatrixIII_jit(**args)
 
         elif self.sample.type == 2:
-
-            j0s = scipy.special.jn_zeros(0,100.)
-            an, _ = scipy.integrate.newton_cotes(20, 1)
             
             args = {'omega': omega, 
                 'omega0': self.sample.omega0,
@@ -101,10 +98,7 @@ class pointprobeCobject():
             K0, K1, K2 = KmatrixII_jit(**args)
 
         elif self.sample.type == 1:
-
-            j0s = scipy.special.jn_zeros(0,100.)
-            an, _ = scipy.integrate.newton_cotes(20, 1)
-            
+ 
             args = {'omega': omega, 
                 'omega0': self.sample.omega0,
                 'kD': self.sample.kD,
@@ -133,36 +127,45 @@ class pointprobeCobject():
         DC and AC voltages are applied to the cantilever.  Here omega_m
         is the unitless voltage-modulation frequency."""
         
-        K0dc, K1dc, K2dc = self.solve(0.)
-        K0ac, K1ac, K2ac = self.solve(self.sample.cantilever.omega_c)
+        # Compute friction and dc frequency shift
 
-        V0 = ureg.Quantity(self.sample.cantilever.V_ts, 'V')
-        fc = ureg.Quantity(self.sample.cantilever.f_c, 'Hz')
-        kc = ureg.Quantity(self.sample.cantilever.k_c, 'N/m')        
-        
-        C0 = 4 * np.pi * epsilon0 * ureg.Quantity(self.sample.cantilever.R, 'm')
-        q0 = C0 * V0
-        
+        wc = self.sample.cantilever.omega_c
         wc_units = ureg.Quantity(self.sample.cantilever.omega_c, 'Hz')
-        gamma = - (q0**2 * K2ac.imag)/(8 * np.pi * epsilon0 * wc_units)
+
+        _, _, K2wc = self.solve(wc)
+        _, _, K2dc = self.solve(0.)
+
+        Vc = ureg.Quantity(self.sample.cantilever.V_ts, 'V')
+        fc = ureg.Quantity(self.sample.cantilever.f_c, 'Hz')
+        kc = ureg.Quantity(self.sample.cantilever.k_c, 'N/m')   
+        Rc = ureg.Quantity(self.sample.cantilever.R, 'm')
+
+        C0 = 4 * np.pi * epsilon0 * Rc
+        q0 = C0 * Vc
         
-        dK2ac = K2ac - K2dc
-        Kterms = K2dc.real + 0.25 * dK2ac.real
+        gamma = - (q0**2 * K2wc.imag)/(8 * np.pi * epsilon0 * wc_units)
+        
+        dK2wc = K2wc - K2dc
+        Kterms = K2dc + 0.25 * dK2wc
         
         dfdc = - (fc * q0**2 * Kterms.real)/(4 * np.pi * epsilon0 * kc)
         
-        wc = self.sample.cantilever.omega_c
-        wp = wc + omega_m
-        wm = wc - omega_m
+        # Compute ac frequency shift
+
+        w_plus = wc + omega_m
+        w_minus = wc - omega_m
         
-        K0p, K1p, K2p = self.solve(np.abs(wp))
-        K0m, K1m, K2m = self.solve(np.abs(wm))
+        _, _, K2wm = self.solve(omega_m)
+        _, _, K2w_plus = self.solve(w_plus)
+        _, _, K2w_minus = self.solve(np.abs(w_minus))
+           
+        dK2w_plus = K2w_plus - K2dc
+        dK2w_minus = K2w_minus - K2dc
+
+        Kterms = K2wm.real + 0.25 * wc * \
+            (dK2w_plus.real / w_plus + dK2w_minus.real / w_minus)
         
-        dK2p = K2p - K2dc
-        dK2m = K2m - K2dc
-        Kterms = K2ac + wc * 0.25 * (dK2p / wp + dK2m / wm)
-        
-        dfac = - (fc * q0**2 * Kterms.real)/(8 * np.pi * epsilon0 * kc)
+        dfac = - (fc * q0**2 * Kterms)/(8 * np.pi * epsilon0 * kc)
         
         self.results['C0 [aF]'] = C0.to('aF').magnitude
         self.results['q0/qe'] = (q0/qe).to('').magnitude
