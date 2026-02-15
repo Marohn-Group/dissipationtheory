@@ -1,8 +1,17 @@
-# dissipationtheory17e.py
+3# dissipationtheory18e.py
 # Author: John A. Marohn (jam99@cornell.edu)
-# Date: 2025-12-07
+# Date: 2026-02-11
 # Summary: CPU code for computing computing dissipation and frequency shift for a point probe over a 
-#          Type I, Type II, and Type III sample, encoding formulas provided by Roger Loring on 2025-12-05.
+#          Type I, Type II, and Type III sample, encoding formulas provided by Roger Loring on 2026-01-17 
+#          via Overleaf document "BLDS_1_2026".  In the 2026-01-17 treatment, as per Loring's email 
+#          2026-01-09, the frequency shift formula does not include the problematic Bern and Frisch terms.
+#  
+#
+# Classes:
+#  - pointprobeCobject
+#
+# Functions:
+#  - compare_results
 
 import numpy as np
 import scipy
@@ -121,19 +130,20 @@ class pointprobeCobject():
                ureg.Quantity(K1[0][0],'1/nm**2'), \
                ureg.Quantity(K2[0][0],'1/nm**3')
     
-    def properties(self, omega_m):
+    def properties(self, omega_m, omega_am):
         """Compute the friction when a DC voltage is applied to the cantilever.
-        Compute the cantilever friction and frequency shift when 
-        DC and AC voltages are applied to the cantilever.  Here omega_m
-        is the unitless voltage-modulation frequency."""
+        Compute the frequency shift when DC and AC voltages are applied to the cantilever.
+        Here omega_m is the unitless voltage-modulation frequency."""
         
-        # Compute friction and dc frequency shift
+        # Compute the DC frequency shift, the LDS frequency shift, 
+        # and the friction
 
         wc = self.sample.cantilever.omega_c
         wc_units = ureg.Quantity(self.sample.cantilever.omega_c, 'Hz')
 
-        _, _, K2wc = self.solve(wc)
         _, _, K2dc = self.solve(0.)
+        _, _, K2wc = self.solve(wc)
+        _, _, K2wm = self.solve(omega_m)
 
         Vc = ureg.Quantity(self.sample.cantilever.V_ts, 'V')
         fc = ureg.Quantity(self.sample.cantilever.f_c, 'Hz')
@@ -143,38 +153,29 @@ class pointprobeCobject():
         C0 = 4 * np.pi * epsilon0 * Rc
         q0 = C0 * Vc
         
-        gamma = - (q0**2 * K2wc.imag)/(8 * np.pi * epsilon0 * wc_units)
+        df_DC = - (fc * q0**2 * K2dc.real)/(4 * np.pi * epsilon0 * kc)
+        df_LDS = - (fc * q0**2 * K2wm.real)/(8 * np.pi * epsilon0 * kc)
         
-        dK2wc = K2wc - K2dc
-        Kterms = K2dc + 0.25 * dK2wc
-        
-        dfdc = - (fc * q0**2 * Kterms.real)/(4 * np.pi * epsilon0 * kc)
-        
-        # Compute ac frequency shift
+        gamma = - (q0**2 * K2wc.imag)/(8 * np.pi * epsilon0 * wc_units)    
 
-        w_plus = wc + omega_m
-        w_minus = wc - omega_m
-        
-        _, _, K2wm = self.solve(omega_m)
-        _, _, K2w_plus = self.solve(w_plus)
-        _, _, K2w_minus = self.solve(np.abs(w_minus))
-           
-        dK2w_plus = K2w_plus - K2dc
-        dK2w_minus = K2w_minus - K2dc
+        # Compute BDLS frequency shift
 
-        Kterms = K2wm.real + 0.25 * wc * \
-            (dK2w_plus.real / w_plus + dK2w_minus.real / w_minus)
+        _, _, K2wmm = self.solve(omega_m - omega_am)
+        _, _, K2wmp = self.solve(omega_m + omega_am)
+   
+        K2terms = K2wm + 0.25 * (K2wmm + K2wm + K2wmp)
         
-        dfac = - (fc * q0**2 * Kterms)/(8 * np.pi * epsilon0 * kc)
+        df_BLDS = - (fc * q0**2 * K2terms.real)/(32 * np.pi * epsilon0 * kc)
         
         self.results['C0 [aF]'] = C0.to('aF').magnitude
         self.results['q0/qe'] = (q0/qe).to('').magnitude
         self.results['gamma [pN s/m]'] = gamma.to('pN s/m').magnitude
-        self.results['Delta f dc [Hz]'] = dfdc.to('Hz').magnitude
-        self.results['Delta f ac [Hz]'] = dfac.to('Hz').magnitude
+        self.results['Delta f dc [Hz]'] = df_DC.to('Hz').magnitude
+        self.results['Delta f ac [Hz]'] = df_LDS.to('Hz').magnitude
+        self.results['Delta f am [Hz]'] = df_BLDS.to('Hz').magnitude
         
         self.keys += ['C0 [aF]', 'q0/qe', 'gamma [pN s/m]']
-        self.keys += ['Delta f dc [Hz]', 'Delta f ac [Hz]']
+        self.keys += ['Delta f dc [Hz]', 'Delta f ac [Hz]', 'Delta f am [Hz]']
         
     def print_key_results(self):
 
@@ -251,8 +252,9 @@ if __name__ == "__main__":
     obj['point'] = pointprobeCobject(sample1_jit)
     obj['point'].addsphere(h)
     obj['point'].set_breakpoints(15)
-    obj['point'].properties(wm)
+    obj['point'].properties(omega_m=wm, omega_am = 250.)
     obj['point'].print_key_results()
 
     compare_results(obj, 'sphere', 'point', 
-        ['C0 [aF]', 'gamma [pN s/m]', 'Delta f dc [Hz]', 'Delta f ac [Hz]'])
+        ['C0 [aF]', 'gamma [pN s/m]', 
+         'Delta f dc [Hz]', 'Delta f ac [Hz]', 'Delta f am [Hz]'])
