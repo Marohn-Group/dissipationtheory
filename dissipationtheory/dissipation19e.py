@@ -1,4 +1,4 @@
-3# dissipationtheory18e.py
+# dissipationtheory19e.py
 # Author: John A. Marohn (jam99@cornell.edu)
 # Date: 2026-02-11
 # Summary: CPU code for computing computing dissipation and frequency shift for a point probe over a 
