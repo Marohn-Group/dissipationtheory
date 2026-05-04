@@ -342,11 +342,11 @@ def plot_LDS(self, n=1, scaled=False):
 
         if scaled:
             x = omega_m_scaled
-            xlabel = 'scaled modulation freq. $\Omega_{\mathrm{m}} = ' \
-                    '(\epsilon_{\mathrm{s}}^{\prime} \omega_{\mathrm{m}})/\omega_0$'
+            xlabel = r'scaled modulation freq. $\Omega_{\mathrm{m}} = ' \
+                     r'(\epsilon_{\mathrm{s}}^{\prime} \omega_{\mathrm{m}})/\omega_0$'
         else:
             x = omega_m
-            xlabel = 'modulation freq. $\omega_{\mathrm{m}}$ [rad/s]'
+            xlabel = r'modulation freq. $\omega_{\mathrm{m}}$ [rad/s]'
 
         plt.semilogx(x, np.abs(f_BLDS), '-', color=color_list[index])
 
