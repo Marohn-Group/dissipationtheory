@@ -159,7 +159,7 @@ class pointprobeCobject():
         return q0, wc, fc, kc
     
     def friction(self):
-        """Compute the the frition using equation 40 in Cohn2026may."""
+        """Compute the the frition using equation 45 in Cohn2026may."""
 
         _, _, K2wc = self.solve(self.sample.cantilever.omega_c)
         q0, wc, _, _ = self.properties()
@@ -172,7 +172,7 @@ class pointprobeCobject():
         return(gamma.to('pN s/m').magnitude)
 
     def DC(self):
-        "Compute the dc frequency shift using equation 38 in Cohn2026may"
+        "Compute the dc frequency shift using equation 42 in Cohn2026may"
 
         _, _, K2dc = self.solve(0.)
         q0, _, fc, kc = self.properties()
@@ -185,7 +185,7 @@ class pointprobeCobject():
         return(df_DC.to('Hz').magnitude)
 
     def LDS(self, omega_m):
-        """Return an array of LDS frequency shifts, computed using equation 39 in 
+        """Return an array of LDS frequency shifts, computed using equation 43 in 
         Cohn2026may.  Here omega_m is a numpy array of unitless voltage-modulation 
         frequencies in Hz."""
         
@@ -207,9 +207,9 @@ class pointprobeCobject():
         return(df_LDS.to('Hz').magnitude)
 
     def BLDS(self, omega_m, omega_am):
-        """Return an array of BLDS frequency shifts.  Here omega_m is a numpy
-        array of unitless voltage-modulation frequencies in Hz, and omega_am
-        is the amplitude-modulation frequency in Hz."""
+        """Return an array of BLDS frequency shifts, computed using equation 44 
+        in Cohn2026may.  Here omega_m is a numpy array of unitless voltage-modulation
+        frequencies in Hz, and omega_am is the amplitude-modulation frequency in Hz."""
         
         q0, _, fc, kc = self.properties()
         
@@ -227,9 +227,9 @@ class pointprobeCobject():
             K2wmm[index] = ureg.Quantity(K2wmm__value, '1/nm**3')
             K2wmp[index] = ureg.Quantity(K2wmp__value, '1/nm**3')
         
-        K2terms = K2wm + 0.25 * (K2wmm + K2wm + K2wmp)
+        K2terms = K2wm + 0.25 * (K2wmm + K2wmp)
 
-        df_BLDS = - (fc * q0**2 * K2terms.real)/(32 * np.pi * epsilon0 * kc)
+        df_BLDS = - (fc * q0**2 * K2terms.real)/(128 * np.pi * epsilon0 * kc)
         
         # Save a representative frequency shift, the first array element
         self.results['Delta f am [Hz]'] = df_BLDS[0].to('Hz').magnitude
@@ -238,9 +238,10 @@ class pointprobeCobject():
         return(df_BLDS.to('Hz').magnitude)
 
     def LDSO(self, V0, Vm, omega_m):
-        """Return an array of LDS frequency shifts.  Here V0 is the unitless dc voltage, 
-        Vm is the zero-to-peak ac voltage, and omega_m is a numpy array of unitless voltage-modulation
-        frequencies in Hz."""
+        """Return an array of LDS0 frequency shifts.  The LDS0 frequency shift is the sum of the
+        DC frequency shift, equation 42 in Cohn2026may, and the LDS frequency shift, equation 43 in 
+        Cohn2026may.  Here V0 is the unitless dc voltage, Vm is the zero-to-peak ac voltage, and 
+        omega_m is a numpy array of unitless voltage-modulation frequencies in Hz."""
         
         _, _, fc, kc = self.properties()
         
@@ -257,7 +258,7 @@ class pointprobeCobject():
             K2wm[index] = ureg.Quantity(K2wm__value, '1/nm**3')
             
         df_LDSO = - (fc * q0**2 * ureg.Quantity(K2dc, '1/nm^3').real +
-                     fc * 0.50 * qm**2 * K2wm.real)/(4 * np.pi * epsilon0 * kc)
+                     fc * 0.50 * qm**2 * K2wm.real)/(16 * np.pi * epsilon0 * kc)
 
         return(df_LDSO.to('Hz').magnitude)
 
@@ -362,6 +363,8 @@ def plot_LDS(self, n=1, scaled=False):
     return fig 
 
 def dfdclims(obj):
+    """The dc frequecy shift, equation 61 in Cohn2026apr, in the metallic-sample
+     and dielectric-sample limits."""
     
     es = obj.sample.epsilon_s
     eta = (es - 1)/(es + 1)
@@ -375,7 +378,7 @@ def dfdclims(obj):
 
     zc = ureg.Quantity(obj.info['r [nm]'] + obj.info['h [nm]'], 'nm')
     
-    dfdc = -(fc * q0**2)/(4 * np.pi * epsilon0 * kc * 4 * zc**3)
+    dfdc = -(fc * q0**2)/(64 * np.pi * epsilon0 * kc * zc**3)
     
     return np.array([dfdc.to('Hz').magnitude,
                      eta.real * dfdc.to('Hz').magnitude])
