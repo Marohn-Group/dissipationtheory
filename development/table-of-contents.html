@@ -39,7 +39,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 <ul>
 <li>author: John A. Marohn</li>
 <li>created: 2024-10-29</li>
-<li>last updated: 2025-12-07</li>
+<li>last updated: 2026-07-21</li>
 </ul>
 <h1 id="software">Software</h1>
 <p>The <code>dissipationtheory/dissipationtheory</code> folder contains
@@ -83,13 +83,28 @@ shift (dc, ac, am)</li>
 <li>Calculated: capacitance derivatives, force, friction, frequency
 shift (dc, ac, am)</li>
 </ul></li>
-<li><p><code>dissipation17e.py</code> contains the class
-<code>pointprobeCobject</code>:</p>
+<li><p><code>dissipation21e.py</code> performs the following
+calculations:</p>
 <ul>
 <li>Tip model: point probe</li>
 <li>Calculation method: <code>numba</code>, CPU</li>
 <li>Samples modeled: Type I, II, III, and IV</li>
 <li>Calculated: friction and frequency shift (dc, ac)</li>
+</ul>
+<p>The file contains the classes</p>
+<ul>
+<li><code>pointprobeCobject</code></li>
+<li><code>ExptSweepConductivity</code></li>
+</ul>
+<p>and the functions</p>
+<ul>
+<li><code>plot_LDS</code></li>
+<li><code>dfdclims</code></li>
+<li><code>plot_LDS_zero</code></li>
+<li><code>plot_friction</code></li>
+<li><code>plot_friction_list</code></li>
+<li><code>latex_float</code></li>
+<li><code>compare_results</code></li>
 </ul></li>
 </ul>
 <h1 id="studies">Studies</h1>
@@ -1003,6 +1018,49 @@ compare point-probe results to the results of finite-tip/sphere
 calculation computed using <code>twodimCobject</code> in
 <code>dissipation13e.py</code> at large tip-sample separation where
 Loring’s point-probe approximation is valid.</p></li>
+<li><p><strong>Study 73</strong> (<a
+href="dissipation-theory--Study-73.html">html</a>). Recreate the figures
+in Study 42 using the point-probe object <code>pointprobeCobject</code>
+in <code>dissipation17e.py</code>. Adapt code from Study 72. This LDS
+spectrum is problematic because it includes the Bern and Frisch terms
+which we subsequently decide were unphysical.</p></li>
+<li><p><strong>Study 74</strong> (<a
+href="dissipation-theory--Study-74.html">html</a>). Recreate the figures
+in Study 41 using the point-probe object <code>pointprobeCobject</code>
+in <code>dissipation18e.py</code> which contains updated frequency shift
+formulas with the Bern-Frisch terms <em>removed</em>. Start by adapting
+code from Study 73.</p></li>
+<li><p><strong>Study 75</strong> (<a
+href="dissipation-theory--Study-75.html">html</a>). Recreate the figures
+in Study 74 using the point-probe object <code>pointprobeCobject</code>
+and functions defined in <code>dissipation19e.py</code>. The code in
+<code>dissipation19e.py</code> incorporates the plotting and
+parameter-sweeping functions in Study 74 and includes an additional
+function for computing the “LDSO” spectrum, in which both a DC and AC
+voltage are applied. The simulations use representative experimental
+parameters drawn from “Coupled Slow and Fast Charge Dynamics in Cesium
+Lead Bromide Perovskite”, Tirmzi et al. ACS Energy Lett. (2017)
+2:488-496, <a
+href="https://doi.org/10.1021/acsenergylett.6b00722">doi:10.1021/acsenergylett.6b00722</a>.</p></li>
+<li><p><strong>Study 76</strong> (<a
+href="dissipation-theory--Study-76.html">html</a>). Recreate the figures
+in Study 75 using revised equations in <code>dissipation20e.py</code>,
+containing revised frequency-shift formulas from Roger Loring. The
+simulations use representative experimental parameters drawn from
+“Coupled Slow and Fast Charge Dynamics in Cesium Lead Bromide
+Perovskite”, Tirmzi et al. ACS Energy Lett. (2017) 2:488-496, <a
+href="https://doi.org/10.1021/acsenergylett.6b00722">doi:10.1021/acsenergylett.6b00722</a>.</p></li>
+<li><p><strong>Study 77</strong> (<a
+href="dissipation-theory--Study-77.html">html</a>). Recreate the figures
+in Study 75 using revised equations in <code>dissipation21e.py</code>.
+The equations in <code>dissipation21e.py</code> are essentially those in
+<code>dissipation19e.py</code>, which we now believe to be correct; the
+functions in <code>dissipation21e.py</code> are simply better commented
+versions of the functions in <code>dissipation19e.py</code>. The
+simulations use representative experimental parameters drawn from
+“Coupled Slow and Fast Charge Dynamics in Cesium Lead Bromide
+Perovskite”, Tirmzi et al. ACS Energy Lett. (2017) 2:488-496, <a
+href="https://doi.org/10.1021/acsenergylett">doi:10.1021/acsenergylett.6b00722</a>.</p></li>
 </ul>
 </body>
 </html>

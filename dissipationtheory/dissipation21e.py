@@ -1,4 +1,4 @@
-# dissipation201.py
+# dissipation21.py
 # Author: John A. Marohn (jam99@cornell.edu)
 # Date: 2026-07-17
 # Summary: CPU code for computing computing dissipation and frequency shift for a point probe over a 
@@ -9,10 +9,17 @@
 #          Overleaf repository BLDS_1_2026.  The formulas are essentially those in dissipation19e.py,
 #          but now the functions are better commented.
 #
+#
 # Classes:
 #  - pointprobeCobject
-#
+#  - ExptSweepConductivity
 # Functions:
+#  - plot_LDS
+#  - dfdclims
+#  - plot_LDS_zero
+#  - plot_friction
+#  - plot_friction_list
+#  - latex_float
 #  - compare_results
 
 import numpy as np

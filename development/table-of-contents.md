@@ -4,7 +4,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 
 - author: John A. Marohn
 - created: 2024-10-29
-- last updated: 2025-12-07
+- last updated: 2026-07-21
 
 
 # Software
@@ -36,11 +36,28 @@ The `dissipationtheory/dissipationtheory` folder contains both current and obsol
   - Samples modeled: Type I and III
   - Calculated: capacitance derivatives, force, friction, frequency shift (dc, ac, am)
 
-- `dissipation17e.py` contains the class `pointprobeCobject`:
+- `dissipation21e.py` performs the following calculations:
+
   - Tip model: point probe
   - Calculation method: `numba`, CPU
   - Samples modeled: Type I, II, III, and IV
   - Calculated: friction and frequency shift (dc, ac)
+  
+  The file contains the classes 
+  
+  - `pointprobeCobject`
+  - `ExptSweepConductivity` 
+  
+  and the functions 
+  
+  - `plot_LDS`
+  - `dfdclims`
+  - `plot_LDS_zero`
+  - `plot_friction`
+  - `plot_friction_list`
+  - `latex_float`
+  - `compare_results`
+
 
 
 # Studies
@@ -206,3 +223,13 @@ $f_2 \: [\mathrm{Hz}/\mathrm{V}^2]$ versus $h \: [\mathrm{nm}]$ data measured ov
 - **Study 71** ([html](dissipation-theory--Study-71.html)).  Develop code for computing the AC and AM frequency shift for a Type I sample.  Compare the real and imaginary parts of the $K_n$ integrals computed using CPU and GPU code over a wide range of sample parameters. The $r_p$ function is discontinuous when computed on the GPU. This pathology suggests that the error in $\mathrm{Im}[K_2]$ at high $\sigma$ and small $\rho$ is a problem with $r_p$ and not with the integration procedure.   There are a couple of possible sources of the faulty $r_p$, keeping in mind that `torch` code on the GPU is running in single precision and $\theta_1$ and $k / \eta$ are complex numbers.  We could have errors in the (1) the square root of a complex number in $\theta_1$, (2) the square root of a complex number in $k / \eta$, or (3) evaluating `sinh`, `cosh`, or `tanh` with complex argument $\theta_1$.
 
 - **Study 72** ([html](dissipation-theory--Study-72.html)).   Develop code for computing dissipation and frequency shift for a point probe over a Type I, Type II, and Type III sample, encoding formulas provided by Roger Loring on 2026-12-05.  The code developed here is built on the `numba` code in `dissipation13e.py` and the example computations in `dissipation-theory--Study-65.ipynb`; computations are thus performed using compiled code on the CPU, not the GPU.  Perform a test calculation for a Type I sample.  In this test, compare point-probe results to the results of finite-tip/sphere calculation computed using `twodimCobject` in `dissipation13e.py` at large tip-sample separation where Loring's point-probe approximation is valid.
+
+- **Study 73** ([html](dissipation-theory--Study-73.html)). Recreate the figures in Study 42 using the point-probe object `pointprobeCobject` in `dissipation17e.py`. Adapt code from Study 72. This LDS spectrum is problematic because it includes the Bern and Frisch terms which we subsequently decide were unphysical.
+
+- **Study 74** ([html](dissipation-theory--Study-74.html)). Recreate the figures in Study 41 using the point-probe object `pointprobeCobject` in `dissipation18e.py` which contains updated frequency shift formulas with the Bern-Frisch terms *removed*. Start by adapting code from Study 73. 
+
+- **Study 75** ([html](dissipation-theory--Study-75.html)). Recreate the figures in Study 74 using the point-probe object `pointprobeCobject` and functions defined in `dissipation19e.py`. The code in `dissipation19e.py` incorporates the plotting and parameter-sweeping functions in Study 74 and includes an additional function for computing the “LDSO” spectrum, in which both a DC and AC voltage are applied. The simulations use representative experimental parameters drawn from “Coupled Slow and Fast Charge Dynamics in Cesium Lead Bromide Perovskite”, Tirmzi et al. ACS Energy Lett. (2017) 2:488-496, [doi:10.1021/acsenergylett.6b00722](https://doi.org/10.1021/acsenergylett.6b00722). 
+
+- **Study 76** ([html](dissipation-theory--Study-76.html)). Recreate the figures in Study 75 using revised equations in `dissipation20e.py`, containing revised frequency-shift formulas from Roger Loring.  The simulations use representative experimental parameters drawn from “Coupled Slow and Fast Charge Dynamics in Cesium Lead Bromide Perovskite”, Tirmzi et al. ACS Energy Lett. (2017) 2:488-496, [doi:10.1021/acsenergylett.6b00722](https://doi.org/10.1021/acsenergylett.6b00722). 
+
+- **Study 77** ([html](dissipation-theory--Study-77.html)).  Recreate the figures in Study 75 using revised equations in `dissipation21e.py`. The equations in `dissipation21e.py` are essentially those in `dissipation19e.py`, which we now believe to be correct; the functions in `dissipation21e.py` are simply better commented versions of the functions in `dissipation19e.py`. The simulations use representative experimental parameters drawn from “Coupled Slow and Fast Charge Dynamics in Cesium Lead Bromide Perovskite”, Tirmzi et al. ACS Energy Lett. (2017) 2:488-496, [doi:10.1021/acsenergylett.6b00722](https://doi.org/10.1021/acsenergylett).
