@@ -60,9 +60,9 @@ def rpI(
     es: complex,
     ed: complex
 ) -> torch.complex128:
-    """Fresnel coefficient for Sample III object:
+    """Fresnel coefficient for Sample I object:
 
-        cantilever | vacuum gap | semiconductor (semi-infinite)
+        cantilever | vacuum gap | semiconductor | dielectric (semi-infinite)
 
     In the code below, `y` is the unitless integration variable.
     """
