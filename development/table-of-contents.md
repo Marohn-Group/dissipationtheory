@@ -4,7 +4,7 @@ pandoc table-of-contents.md -o table-of-contents.html --css pandoc.css -s --math
 
 - author: John A. Marohn
 - created: 2024-10-29
-- last updated: 2026-07-21
+- last updated: 2026-07-26
 
 
 # Software
@@ -30,11 +30,37 @@ The `dissipationtheory/dissipationtheory` folder contains both current and obsol
   - Samples modeled: Type I, II, III, and IV
   - Calculated: capacitance derivatives, force, friction, frequency shift (dc, ac, am)
 
-- `dissipation16e.py` contains the class `twodimCobject`:
+- `dissipation16e.py` performs the following calculations
+
   - Tip model: sphere or sphere-plus cone
   - Calculation method: `torch`, GPU
   - Samples modeled: Type I and III
   - Calculated: capacitance derivatives, force, friction, frequency shift (dc, ac, am)
+
+  The file contains the classes
+
+  - `AccurateComplexTanh`
+  - `AccurateComplexSech`
+  - `AccurateComplexCsch`
+  - `twodimCobject`
+ 
+  and the functions
+ 
+  - `get_device`
+  - `C`
+  - `mytanh`
+  - `mysech`
+  - `mycsch`
+  - `mysqrt`
+  - `rpI`
+  - `rp_I_integrator`
+  - `rpIII`
+  - `rp_III_integrator`
+  - `reduce`
+  - `compute_blds_ac`
+  - `compute_blds_am`
+  - `comparetwoK`
+  - `plotme`å
 
 - `dissipation21e.py` performs the following calculations:
 
@@ -57,7 +83,6 @@ The `dissipationtheory/dissipationtheory` folder contains both current and obsol
   - `plot_friction_list`
   - `latex_float`
   - `compare_results`
-
 
 
 # Studies
@@ -233,3 +258,29 @@ $f_2 \: [\mathrm{Hz}/\mathrm{V}^2]$ versus $h \: [\mathrm{nm}]$ data measured ov
 - **Study 76** ([html](dissipation-theory--Study-76.html)). Recreate the figures in Study 75 using revised equations in `dissipation20e.py`, containing revised frequency-shift formulas from Roger Loring.  The simulations use representative experimental parameters drawn from “Coupled Slow and Fast Charge Dynamics in Cesium Lead Bromide Perovskite”, Tirmzi et al. ACS Energy Lett. (2017) 2:488-496, [doi:10.1021/acsenergylett.6b00722](https://doi.org/10.1021/acsenergylett.6b00722). 
 
 - **Study 77** ([html](dissipation-theory--Study-77.html)).  Recreate the figures in Study 75 using revised equations in `dissipation21e.py`. The equations in `dissipation21e.py` are essentially those in `dissipation19e.py`, which we now believe to be correct; the functions in `dissipation21e.py` are simply better commented versions of the functions in `dissipation19e.py`. The simulations use representative experimental parameters drawn from “Coupled Slow and Fast Charge Dynamics in Cesium Lead Bromide Perovskite”, Tirmzi et al. ACS Energy Lett. (2017) 2:488-496, [doi:10.1021/acsenergylett.6b00722](https://doi.org/10.1021/acsenergylett).
+
+- **Study 78** ([html](dissipation-theory--Study-78.html)) (see also Study 78a, [html](dissipation-theory--Study-78a.html), and Study 78b, [html](dissipation-theory--Study-78b.html)).  Revised GPU code for computing the frequency shift for a Type I sample.  Comparing CPU and GPU calculations, I observe that the error in the imaginary part of the $K_2$ integral, $K_2^{\prime\prime}$, is relatively enormous when $K_2^{\prime\prime}$ is small. To tame this error, I developed, with Google Gemini's help, more accurate torch versions of the tanh(), sech(), and csch() functions; see `dissipation16e.py`. Using the improved hyperbolic trigonometric functions did not resolve the relatively enormous error. After subjecting `dissipation16e.py` to analysis by Google Gemini and Microsoft 365 Copilot, I believe the large relative error arises from glitches in the integrand at small values of $y$ arising from $0/0$-type divergences present in $r_{\mathrm{p}}$ when the charge density $\rho \propto k_{\text{D}}$ is small. These integrand glitches are apparent in Figure 5 in the jupyter notebook. The integrand glitches can be eliminated, and the relative errors in $K_2^{\prime\prime}$ improved, by making sure that the imaginary part of the dielectric constant is not zero.  Instead of setting $\epsilon_{\mathrm{s}}^{\prime\prime} = 0$, below I set $\epsilon_{\mathrm{s}}^{\prime\prime} = - 10^{-4} \epsilon_{\mathrm{s}}^{\prime}$. This small imaginary part of the dielectric constant eliminates the glitches in the integrand, stabilizing the integral. 
+
+  Below is a log-log plot of the GPU-computed versus CPU-computed imaginary part of $K_2$ (times minus one, to make the result positive so I can employ a log scale) for three sets of sample and tip parameters. To obtain the left plot below I used the `values1` parameters which contained 34560 combinations of tip and sample parameters; in three of the six sample dielectric constants in this parameter set, the imaginary part of the dielectric constant was zero. The orange line in the plot traces the diagonal; if GPU and CPU computations were equivalent then all data points would lie on the orange diagonal line.  We can see that many data points lie above the line, indicating large discrepancies between CPU and GPU computations.  In the middle plot I used the `values2` sample parameters; these were the same as as the `values1` parameters except the imaginary part of the dielectric constant was set to a small negative value instead of zero.  In the right plot I again used the `values2` parameters, but carried out the torch computations on the CPU using double precision.   
+  
+  ![A plot](dissipation-theory--Study-78a--Fig-02.png){width=200px}
+  ![A plot](dissipation-theory--Study-78b--Fig-02.png){width=200px}
+  ![A plot](dissipation-theory--Study-78c--Fig-02.png){width=200px}
+
+  Below are the corresponding plots of the relative error in $-K_2^{\prime\prime}$.  We can see that the worst-case relative error has improved from (left) $10^{3}$ to (middle) $10^{-1}$ to (middle) $10^{-5}$. 
+
+  ![A plot](dissipation-theory--Study-78a--Fig-01.png){width=200px}
+  ![A plot](dissipation-theory--Study-78b--Fig-01.png){width=200px}
+  ![A plot](dissipation-theory--Study-78c--Fig-01.png){width=200px}
+
+  Below I plot the integrand for the `values1` parameters giving the worst relative error (real part, blue; imaginary part, orange).  The real and imaginary parts were scaled by the indicated factor so they could be plotted together. The glich in the imaginary part of the integrand is apparent at small negative values of the independent variable $w$.
+  
+  ![](dissipation-theory--Study-78a--Fig-05.png){width=600px}
+  
+  The three computations took 2min 46s, 2min 46s, and 28s respectively. For these test computations, I expected the torch computations to be slower on the CPU than on the GPU, but they were actually faster by a factor of six. This speed up may not hold true for computations threaded over image charges and frequencies.
+  
+  I conclude that there are two potential sources of error in the GPU code. At low charge density, glitches in the $K_2$ integrand arise; these can be eliminated by setting the imaginary part of the dielectric constant to a small negative number. I am running MPS (Apple Silicon GPU) where most GPU computations are effectively limited to single precision (float32). Over a wide range of parameter space, we can see that the single precision GPU computations have significantly larger error than double-precision GPU computations.  
+  
+  Moving to Google Colab, the free plan, gets me access to a Tesla T4 GPU running CUDA version 13.0.  This hardware supports double precision (float64), but at a speed which is 1/32 the single-precision speed. The Google Colab paid plan would enable access to an A100 GPU which can carry out double-precision computations at only half the speed of single-precision.
+  
+- **something**

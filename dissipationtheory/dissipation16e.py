@@ -1,7 +1,30 @@
-# dissipationtheory14e.py
+# dissipationtheory16e.py
 # Author: John A. Marohn (jam99@cornell.edu)
-# Date: 2025-10-09
+# Date: 2026-07-26
 # Summary: Convert the torch GPU code from dissipation14e.py into vmapped torch GPU code.
+#
+# Classes:
+#  - AccurateComplexTanh
+#  - AccurateComplexSech
+#  - AccurateComplexCsch
+#  - twodimCobject
+#
+# Functions:
+#  - get_device
+#  - C
+#  - mytanh
+#  - mysech
+#  - mycsch
+#  - mysqrt
+#  - rpI
+#  - rp_I_integrator
+#  - rpIII
+#  - rp_III_integrator
+#  - reduce
+#  - compute_blds_ac
+#  - compute_blds_am
+#  - comparetwoK
+#  - plotme
 
 import torch
 import numpy as np
@@ -32,23 +55,180 @@ def get_device(verbose=False):
 
     return device
 
-
-@torch.compile
 def C(sj, rk):
     return 1 / torch.linalg.vector_norm(sj - rk)
 
-
 Cmatrix = torch.vmap(torch.vmap(C, (None, 0)), (0, None))
 
-@torch.compile
-def mysech(x):
-    
-    return 2 * torch.exp(-x)/(1 + torch.exp(- 2 * x))
+# ========================
+# START Google Gemini code
+#
+# Prompt: Can you write me a replacement for mytanh(z) that that is more 
+#         accurate for single-precision complex numbers z?
 
-@torch.compile
-def mycsch(x):
+class AccurateComplexTanh(torch.autograd.Function):
+    """
+    A numerically stable replacement for mytanh(z) for complex64 tensors.
+    Prevents NaN generation for large real parts and avoids catastrophic 
+    cancellation near poles.
+    """
     
-    return 2 * torch.exp(-x)/(1 - torch.exp(- 2 * x))
+    @staticmethod
+    def forward(ctx, z):
+        x = z.real
+        y = z.imag
+        
+        # Extract sign to ensure our exponential term is always <= 1
+        s = torch.where(x >= 0, 1.0, -1.0)
+        u = -2.0 * torch.abs(x)
+        
+        exp_u = torch.exp(u)
+        # expm1(u) is extremely precise for small u. 
+        # Since u <= 0, -expm1(u) is strictly non-negative.
+        neg_expm1_u = -torch.expm1(u)
+        
+        # Precompute trigonometric components
+        sin_y = torch.sin(y)
+        cos_y = torch.cos(y)
+        
+        # 2.0 * exp_u
+        exp_u_2 = 2.0 * exp_u
+        
+        # Compute real and imaginary parts using entirely additive logic
+        N_real = neg_expm1_u + exp_u_2 * (sin_y ** 2)
+        D_real = neg_expm1_u + exp_u_2 * (cos_y ** 2)
+        
+        # N_imag = s * 2 * exp(u) * sin(y) * cos(y)
+        N_imag = s * exp_u_2 * sin_y * cos_y
+        D_imag = -N_imag  # The denominator imaginary part is exactly -N_imag
+        
+        N = torch.complex(N_real, N_imag)
+        D = torch.complex(D_real, D_imag)
+        
+        out = s * (N / D)
+        
+        # Cache for the backward pass
+        ctx.save_for_backward(out)
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        out, = ctx.saved_tensors
+        # The exact Wirtinger derivative for complex autograd: grad_output * conj(f'(z))
+        # where f'(z) = 1 - tanh(z)^2
+        grad_input = grad_output * (1.0 - out.pow(2)).conj()
+        return grad_input
+
+# User-facing wrapper
+def mytanh(z: torch.Tensor) -> torch.Tensor:
+    return AccurateComplexTanh.apply(z)
+
+# Prompt: Can you write similar code for sech() and csch()? 
+
+class AccurateComplexSech(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, z):
+        x, y = z.real, z.imag
+        
+        s = torch.where(x >= 0, 1.0, -1.0)
+        u = -torch.abs(x)
+        v = 2.0 * u
+        
+        exp_u = torch.exp(u)
+        exp_v = torch.exp(v)
+        expm1_v = torch.expm1(v)
+        
+        cos_y, sin_y = torch.cos(y), torch.sin(y)
+        
+        # 2*e^u / (cos(y)(1 + e^{2u}) - i*s*sin(y)*expm1(2u))
+        N = 2.0 * exp_u
+        D_real = cos_y * (1.0 + exp_v)
+        D_imag = -s * sin_y * expm1_v
+        
+        D = torch.complex(D_real, D_imag)
+        out = N / D
+        
+        ctx.save_for_backward(out, z)
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        out, z = ctx.saved_tensors
+        # Derivative: -sech(z) * tanh(z)
+        tanh_z = AccurateComplexTanh.apply(z)
+        grad_input = grad_output * (-out * tanh_z).conj()
+        return grad_input
+
+
+class AccurateComplexCsch(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, z):
+        x, y = z.real, z.imag
+        
+        s = torch.where(x >= 0, 1.0, -1.0)
+        u = -torch.abs(x)
+        v = 2.0 * u
+        
+        exp_u = torch.exp(u)
+        exp_v = torch.exp(v)
+        expm1_v = torch.expm1(v)
+        
+        cos_y, sin_y = torch.cos(y), torch.sin(y)
+        
+        # 2*e^u / (-s*cos(y)*expm1(2u) + i*sin(y)*(1 + e^{2u}))
+        N = 2.0 * exp_u
+        D_real = -s * cos_y * expm1_v
+        D_imag = sin_y * (1.0 + exp_v)
+        
+        D = torch.complex(D_real, D_imag)
+        out = N / D
+        
+        ctx.save_for_backward(out, z)
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        out, z = ctx.saved_tensors
+        # Derivative: -csch(z) * coth(z)
+        # Since coth(z) = 1 / tanh(z), we can invert our stable tanh
+        tanh_z = _safe_tanh(z)
+        coth_z = 1.0 / tanh_z
+        grad_input = grad_output * (-out * coth_z).conj()
+        return grad_input
+
+# User-facing wrappers
+def mysech(z: torch.Tensor) -> torch.Tensor:
+    return AccurateComplexSech.apply(z)
+
+def mycsch(z: torch.Tensor) -> torch.Tensor:
+    return AccurateComplexCsch.apply(z)
+
+def mysqrt(z: torch.Tensor) -> torch.Tensor:
+    """
+    Computes the square root of complex numbers using only real-valued 
+    operations to bypass PyTorch MPS complex kernel bugs.
+    """
+    if not z.is_complex():
+        return torch.sqrt(z)
+        
+    a = z.real
+    b = z.imag
+    
+    r = torch.abs(z)
+    
+    # Clamp to prevent tiny negative values due to float32 rounding errors
+    real_part = torch.sqrt(torch.clamp((r + a) / 2.0, min=0.0))
+    
+    b_sign = torch.where(b >= 0.0, 
+                         torch.ones_like(b), 
+                         -torch.ones_like(b))
+    
+    imag_part = b_sign * torch.sqrt(torch.clamp((r - a) / 2.0, min=0.0))
+    
+    return torch.complex(real_part, imag_part)
+ 
+# END Google Gemini code
+# ========================
 
 def rpI(
     y: torch.tensor, 
@@ -69,32 +249,37 @@ def rpI(
 
     Omega = omega / omega0
     
-    theta1 = complex(1,0) * torch.sqrt(y**2 * (hs / zr)**2 + (hs * kD)**2 * (1/es + complex(0,1) * Omega))
-    theta2 = complex(1,0) * y * hs / zr
-    k_over_eta = y / torch.sqrt(y**2 + (zr * kD) ** 2 * (1 / es + complex(0, 1) * Omega))
+    theta1 = complex(1,0) * mysqrt(
+        y**2 * (hs / (zr * 1.0e-9) )**2 + (hs * kD)**2 * (1/es + complex(0,1) * Omega))
+    
+    theta2 = complex(1,0) * y * hs / (zr * 1.0e-9)
+
+    k_over_eta = y / mysqrt(
+        y**2 + (zr * 1e-9 * kD) ** 2 * (1 / es + complex(0, 1) * Omega))
 
     p0 = 1 + complex(0,1) * es * Omega
     p1 = k_over_eta / (es * p0)
     p2 = - Omega**2 / (p0 * p0)
     p3 = complex(0,1) * Omega / (ed * p0)
-    p4 = complex(0,1) * Omega * k_over_eta / (es * p0**2) 
+    p4 = complex(0,1) * Omega * k_over_eta / (es * p0 * p0)  # denominator should be (es * p0 * p0) => (es * p0)
     p5 = - k_over_eta**2 / (es**2 * p0**2)
     p6 = complex(0,1) * Omega / p0
     p7 = 1 / ed
 
-    t1 = p1 / torch.tanh(theta1)
-    n1 = p2 * torch.tanh(theta1) * torch.tanh(theta2) + p3 * torch.tanh(theta1) + p4
+    # Marohn code
+    #
+    t1 = p1 / mytanh(theta1)
+    n1 = p2 * mytanh(theta1) * mytanh(theta2) + p3 * mytanh(theta1) + p4
     n2 = - 2 * p4 * mysech(theta2) * mysech(theta1)
-    n3 = p5 * torch.tanh(theta2) * mysech(theta1) * mycsch(theta1)
-    d1 = p6 * torch.tanh(theta1) + torch.tanh(theta2) * (p1 + p7 * torch.tanh(theta1))
+    n3 = p5 * mytanh(theta2) * mysech(theta1) * mycsch(theta1)
+    d1 = p6 * mytanh(theta1) + mytanh(theta2) * (p1 + p7 * mytanh(theta1))
 
     theta_norm = t1 + (n1 + n2 + n3)/d1
-    rp = (1 - theta_norm) / (1 + theta_norm)
- 
+
+    rp = -1 + 2/(1 + theta_norm)
+
     return rp
 
-
-@torch.compile
 def rp_I_integrator(
     omega: float,
     omega0: float,
@@ -116,7 +301,7 @@ def rp_I_integrator(
         torch.log(torch.tensor(y_min)),
         torch.log(torch.tensor(y_max)),
         pts,
-        device=device,
+        device=device
     )
 
     sj = sj + dh
@@ -187,7 +372,7 @@ torch.vmap(
     out_dims=0
 )
 
-@torch.compile
+
 def rpIII(
     y: torch.tensor, 
     omega: float, 
@@ -204,9 +389,8 @@ def rpIII(
     """
 
     Omega = omega / omega0
-    k_over_eta = y / torch.sqrt(
-        y**2 + (zr * 1e-9 * kD) ** 2 * (1 / es + complex(0, 1) * Omega)
-    )
+    k_over_eta = y / mysqrt(
+        y**2 + (zr * 1e-9 * kD) ** 2 * (1 / es + complex(0, 1) * Omega))
 
     p0 = 1 + complex(0, 1) * es * Omega
     p1 = k_over_eta / (es * p0)
@@ -217,7 +401,7 @@ def rpIII(
 
     return rp
 
-@torch.compile
+
 def rp_III_integrator(
     omega: float,
     omega0: float,
@@ -237,7 +421,7 @@ def rp_III_integrator(
         torch.log(torch.tensor(y_min)),
         torch.log(torch.tensor(y_max)),
         pts,
-        device=device,
+        device=device
     )
 
     sj = sj + dh
@@ -261,19 +445,17 @@ def rp_III_integrator(
 
     return [K0, K1, K2]  # Works if this is a list but NOT a torch.tensor()
 
-
 # map over sj, rk
 
 KmatrixIII = torch.vmap(
     torch.vmap(
         rp_III_integrator,
-        in_dims=(None, None, None, None, None, 0, None, None),
+        in_dims=(None, None, None, None, None, 0, None, None, None),
         out_dims=0,
     ),
-    in_dims=(None, None, None, None, 0, None, None, None),
+    in_dims=(None, None, None, None, 0, None, None, None, None),
     out_dims=0,
 )
-
 
 # map over h, omega, sj, rk
 
@@ -544,8 +726,8 @@ class twodimCobject():
         elif self.sample.type == 1:
         
             omega0 = self.sample.omega0.to('Hz').magnitude
-            kD = self.sample.kD.to('1/nm').magnitude
-            hs = self.sample.h_s.to('nm').magnitude
+            kD = self.sample.kD.to('1/m').magnitude
+            hs = self.sample.h_s.to('m').magnitude
             es = self.sample.epsilon_s.to('').magnitude            
             ed = self.sample.epsilon_d.to('').magnitude
             
