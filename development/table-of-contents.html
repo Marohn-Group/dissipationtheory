@@ -1140,10 +1140,12 @@ width="300" alt="A plot" /></p>
 href="dissipation-theory--Study-78.html">html</a>) (see also Study 78a,
 <a href="dissipation-theory--Study-78a.html">html</a>, and Study 78b, <a
 href="dissipation-theory--Study-78b.html">html</a>). Revised GPU code
-for computing the frequency shift for a Type I sample. Comparing CPU and
-GPU calculations, I observe that the error in the imaginary part of the
-<span class="math inline">\(K_2\)</span> integral, <span
-class="math inline">\(K_2^{\prime\prime}\)</span>, is relatively
+for computing the frequency shift for a Type I sample. Comparing CPU
+calculations (<code>dissipation9a.py</code> and
+<code>dissipation9b.py</code>) and GPU calculations
+(<code>dissipation16e.py</code>), I observe that the error in the
+imaginary part of the <span class="math inline">\(K_2\)</span> integral,
+<span class="math inline">\(K_2^{\prime\prime}\)</span>, is relatively
 enormous when <span class="math inline">\(K_2^{\prime\prime}\)</span> is
 small. To tame this error, I developed, with Google Gemini’s help, more
 accurate torch versions of the tanh(), sech(), and csch() functions; see
