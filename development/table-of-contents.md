@@ -60,7 +60,7 @@ The `dissipationtheory/dissipationtheory` folder contains both current and obsol
   - `compute_blds_ac`
   - `compute_blds_am`
   - `comparetwoK`
-  - `plotme`å
+  - `plotme`
 
 - `dissipation21e.py` performs the following calculations:
 
