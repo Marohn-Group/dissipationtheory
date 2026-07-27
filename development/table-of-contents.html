@@ -423,19 +423,23 @@ the capacitance of a sphere-tipped cone over a metal using
 <em>exactly</em> the method of Xu and co-workers. See Xu, J.; Li, J.;
 Li, W. Calculating Electrostatic Interactions in Atomic Force Microscopy
 with Semiconductor Samples. AIP Advances (2019) 9(10): 105308, <a
-href="https://doi.org/10.1063/1.5110482">doi:10.1063/1.5110482</a>.
-Benchmark the method by computing the capacitance, and capacitance
-derivatives, of a sphere over a ground plane. This study includes a
-lengthy introduction, with references, and a methods section, with
-typeset equations. I reproduce Xu’s Fig. 3 plot of force versus
-tip-sample separation for a sphere-cone over a metal and, for
-comparison, plot the force predicted by my numerical model. To compare
-their calculated force to mine, I digitized Xu’s Fig. 3 data using
-WebPlotDigitizer. Plotting Xu’s normalized force and my calculated
-normalized force versus <span class="math inline">\(h/r\)</span>, I find
-that the two calculations agree to within 0.25 percent, a reasonable
-number given the finite resolution of the WebPlotDigitizer
-program.</p></li>
+href="https://doi.org/10.1063/1.5110482">doi:10.1063/1.5110482</a>. This
+study includes a lengthy introduction, with references, and a methods
+section, with typeset equations. I benchmarked the method by computing
+the capacitance, and capacitance derivatives, of a sphere over a ground
+plane.</p>
+<p><img src="dissipation-theory--Study-33--Fig-1.png" width="600" /></p>
+<p>I reproduced Xu’s Fig. 3 plot of force versus tip-sample separation
+for a sphere-cone over a metal and, for comparison, plotted the force
+predicted by my numerical model. To compare their calculated force to
+mine, I digitized Xu’s Fig. 3 data using WebPlotDigitizer. Plotting Xu’s
+normalized force and my calculated normalized force versus <span
+class="math inline">\(h/r\)</span>, I find that the two calculations
+agree to within 0.25 percent, a reasonable number given the finite
+resolution of the WebPlotDigitizer program.</p>
+<div style="text-align: center;">
+<p><img src="./dissipation-theory--Study-33--Fig-2.png" width="275"/></p>
+</div></li>
 <li><p><strong>Study 34</strong> (<a
 href="dissipation-theory--Study-34.html">html</a>). Numerically compute
 BLDS spectra and friction for a cantilever oscillating in the
@@ -643,22 +647,44 @@ the cantilever object.</p></li>
 <li><p><strong>Study 50</strong> (<a
 href="dissipation-theory--Study-50.html">html</a>). Run finite-tip
 simulations. Test drive the code in <code>dissipationtheory8c.py</code>,
-comparing the frequency shift measured over gold to that computed using
-(1) a sphere and (2) a sphere-plus-cone, both over a Type I “metallic”
-sample. Both models predict the size of the frequency shift at small
-tip-sample separation <span class="math inline">\(h\)</span> with a
-reasonable tip radius and essentially no other free parameters. Model 2
-does a better job than Model 1 at predicting the frequency shift at
-large <span class="math inline">\(h\)</span>. These computations are
-painfully slow. This is because I am modeling the gold substrate as a
-Type I sample, essentially a high-conductivity semiconductor, and the
-associated response function is very complicated and slow to integrate.
-In Study 37 I implimented a sphere-plus-cone frequency shift calculation
-using a metal response function, which is much faster to compute. The
-Study 37 calculation was fast enough to enable least-squares fitting of
-the data to obtain a tip radius and cone angle (this took about a
-minute). Below I perform code profiling, brainstorm ways to speed up
-data analysis, and explore vector integration.</p></li>
+comparing the frequency-shift data measured over gold to that computed
+using (Model 1) a sphere and (Model 2) a sphere-plus-cone, both over a
+Type I “metallic” sample. The data was recorded by Virginia McGhee on
+08/11/2023; she measured frequency versus voltage over gold and fit the
+resulting data to a parabola. Modeling the tip as a sphere, Loring’s
+equations predict the frequency shift correctly at small <span
+class="math inline">\(h\)</span> with a reasonable radius (55 nm) and
+essentially no other free parameters. The frequency shift is
+underestimated at large <span class="math inline">\(h\)</span>.</p>
+<div style="text-align: center;">
+<p><img src="./dissipation-theory--Study-50--Fig-01.png" width="325"/></p>
+</div>
+<p>Modeling the tip as a sphere-plus-cone, Loring’s equations now
+predict the frequency shift correctly at nearly all <span
+class="math inline">\(h\)</span>, again using a reasonable radius (41
+nm), cone length (2 <span class="math inline">\(\mu\)</span>m), and cone
+angle (19 degrees) and essentially no other free parameters. The
+agreement at small <span class="math inline">\(h\)</span> could probably
+be improved by tweaking the tip radius, but the code ran painfully
+slowly and so I skipped this optimization.</p>
+<div style="text-align: center;">
+<p><img src="./dissipation-theory--Study-50--Fig-02.png" width="325"/></p>
+</div>
+<p>In summary, both models predict the size of the frequency shift at
+small tip-sample separation <span class="math inline">\(h\)</span> with
+a reasonable tip radius and essentially no other free parameters. Model
+2 did a better job than Model 1 at predicting the frequency shift at
+large <span class="math inline">\(h\)</span>.</p>
+<p>These computations were painfully slow. This is because I modeled the
+gold substrate as a Type I sample, essentially a high-conductivity
+semiconductor, and the associated response function is very complicated
+and slow to integrate. In Study 37 I implimented a sphere-plus-cone
+frequency shift calculation using a metal response function, which was
+much faster to compute. The Study 37 calculation was fast enough to
+enable least-squares fitting of the data to obtain a tip radius and cone
+angle (this took about a minute). At the conclusion of this notebook I
+performed code profiling, brainstormed ways to speed up data analysis,
+and explored vector integration.</p></li>
 <li><p><strong>Study 51</strong> (<a
 href="dissipation-theory--Study-51.html">html</a>). Test and profile the
 code in the <code>dissipationtheory9a.py</code>.</p></li>
@@ -775,9 +801,9 @@ accurate and reasonably fast integrator in place (<a
 href="dissipation-theory--Study-57.html">Study 57</a>), let me revisit
 writing a fast <code>twodimCobject</code> object for simulating the
 capacitance, dissipation, and frequency shift of a finite tip (<a
-href="dissipation-theory--Study-53.html">Study 53</a>). Below I develop
-code for calculating cantilever observables over a sample consisting of
-a semi-infinite metal (Type IV sample) and semi-infinite semiconductor
+href="dissipation-theory--Study-53.html">Study 53</a>). I developed code
+for calculating cantilever observables over a sample consisting of a
+semi-infinite metal (Type IV sample) and semi-infinite semiconductor
 (Type III sample). The code is a combination of compiled functions and
 uncompiled Python. The execution time is reasonably good — 10 ms for a
 metallic / Type IV sample and 50 ms for semiconductor / Type III sample.
@@ -786,8 +812,16 @@ capacitance derivatives versus height, which can be compared to series
 solutions for the case of a sphere over a (1) semi-infinite metal sample
 and (2) semi-infinite dielectric sample. The relative accuracy was
 highly dependent on tip-sample separation and was in the 10’s of part
-per million range at experimentally relevant tip-sample
-separations.</p></li>
+per million range at experimentally relevant tip-sample separations.</p>
+<p>The plots below show capacitance derivatives computed for a sphere
+over a (left) metal; (center) metal, modeled as a semi-infinite
+semiconductor with a dielectric constant of 1e6; and (right)
+semi-infinite semiconductor with dielectric constant 3.</p>
+<p><img src="dissipation-theory--Study-58--Fig-01.png" width="200"
+alt="A plot" /> <img src="dissipation-theory--Study-58--Fig-02.png"
+width="200" alt="A plot" /> <img
+src="dissipation-theory--Study-58--Fig-03.png" width="200"
+alt="A plot" /></p></li>
 <li><p><strong>Study 59</strong> (<a
 href="dissipation-theory--Study-59.html">html</a>). Test drive the new
 <code>twodimCobject</code> object. I have moved the code developed in <a
@@ -810,7 +844,10 @@ oppositite sign at large <span class="math inline">\(h\)</span>. Here I
 show that the divergence of the image charges, and the calculated
 frequency, can be eliminated by adding a small filtering parameter <span
 class="math inline">\(\alpha = 1 \times 10^{-6}\)</span> without
-affecting the calculated cantilever frequency significantly.</p></li>
+affecting the calculated cantilever frequency significantly.</p>
+<div style="text-align: center;">
+<p><img src="./dissipation-theory--Study-60--Fig-07.png" width="325"/></p>
+</div></li>
 <li><p><strong>Study 61</strong> (<a
 href="dissipation-theory--Study-61.html">html</a>). Test drive the new
 <code>twodimCobject</code> object in<code>dissipation10e.py</code>.
@@ -1085,7 +1122,20 @@ versions of the functions in <code>dissipation19e.py</code>. The
 simulations use representative experimental parameters drawn from
 “Coupled Slow and Fast Charge Dynamics in Cesium Lead Bromide
 Perovskite”, Tirmzi et al. ACS Energy Lett. (2017) 2:488-496, <a
-href="https://doi.org/10.1021/acsenergylett">doi:10.1021/acsenergylett.6b00722</a>.</p></li>
+href="https://doi.org/10.1021/acsenergylett">doi:10.1021/acsenergylett.6b00722</a>.</p>
+<p><img src="dissipation-theory--Study-77--Fig-01.png" width="300"
+alt="A plot" /> <img src="dissipation-theory--Study-77--Fig-02.png"
+width="300" alt="A plot" /></p>
+<div style="text-align: center;">
+<p><img src="./dissipation-theory--Study-77--Fig-03.png" width="350"/></p>
+</div>
+<div style="text-align: center;">
+<p><img src="./dissipation-theory--Study-77--Fig-05.png" width="300"/></p>
+</div>
+<div style="text-align: center;">
+<p><img src="./dissipation-theory--Study-77--Fig-06.png" width="350"/>
+<img src="./dissipation-theory--Study-77--Fig-07.png" width="275"/></p>
+</div></li>
 <li><p><strong>Study 78</strong> (<a
 href="dissipation-theory--Study-78.html">html</a>) (see also Study 78a,
 <a href="dissipation-theory--Study-78a.html">html</a>, and Study 78b, <a
