@@ -250,7 +250,7 @@ def rpI(
     Omega = omega / omega0
     
     theta1 = complex(1,0) * mysqrt(
-        y**2 * (hs / (zr * 1.0e-9) )**2 + (hs * kD)**2 * (1/es + complex(0,1) * Omega))
+        y**2 * (hs / (zr * 1.0e-9) )**2 + (hs * kD)**2 * (1 / es + complex(0,1) * Omega))
     
     theta2 = complex(1,0) * y * hs / (zr * 1.0e-9)
 
@@ -261,13 +261,11 @@ def rpI(
     p1 = k_over_eta / (es * p0)
     p2 = - Omega**2 / (p0 * p0)
     p3 = complex(0,1) * Omega / (ed * p0)
-    p4 = complex(0,1) * Omega * k_over_eta / (es * p0 * p0)  # denominator should be (es * p0 * p0) => (es * p0)
+    p4 = complex(0,1) * Omega * k_over_eta / (es * p0 * p0)
     p5 = - k_over_eta**2 / (es**2 * p0**2)
     p6 = complex(0,1) * Omega / p0
     p7 = 1 / ed
 
-    # Marohn code
-    #
     t1 = p1 / mytanh(theta1)
     n1 = p2 * mytanh(theta1) * mytanh(theta2) + p3 * mytanh(theta1) + p4
     n2 = - 2 * p4 * mysech(theta2) * mysech(theta1)
